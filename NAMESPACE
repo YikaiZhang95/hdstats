@@ -1,6 +1,6 @@
 # hand-written (combines hdhuber + hdsvm + hdqr)
 
-useDynLib(hdststs, .registration=TRUE)
+useDynLib(hdstats, .registration=TRUE)
 importFrom(Rcpp, evalCpp)
 
 import(Matrix)

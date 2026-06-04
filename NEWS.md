@@ -1,4 +1,4 @@
-# hdststs 0.1.0
+# hdstats 0.1.0
 
 * Initial release.
 * Unifies the `hdhuber`, `hdsvm`, and `hdqr` solvers into a single package.

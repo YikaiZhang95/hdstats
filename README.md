@@ -1,13 +1,13 @@
-# hdststs
+# hdstats
 
 <!-- badges: start -->
-[![R-CMD-check](https://github.com/yikaizhang/hdststs/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/yikaizhang/hdststs/actions/workflows/R-CMD-check.yaml)
+[![R-CMD-check](https://github.com/yikaizhang/hdstats/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/yikaizhang/hdstats/actions/workflows/R-CMD-check.yaml)
 [![License: GPL v2](https://img.shields.io/badge/License-GPLv2-blue.svg)](https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html)
 <!-- badges: end -->
 
 **High-dimensional smoothed Huber, SVM, and quantile regression in one package.**
 
-`hdststs` unifies three penalized high-dimensional regression solvers — Huber
+`hdstats` unifies three penalized high-dimensional regression solvers — Huber
 regression, support vector machines, and quantile regression — behind a single
 R interface. All three use the *finite smoothing algorithm* (uniform-density
 convolution smoothing) with coordinate descent, and an elastic-net penalty
@@ -23,7 +23,7 @@ results are equivalent to the originals (see [Correctness](#correctness)).
 
 ```r
 # install.packages("remotes")
-remotes::install_github("yikaizhang/hdststs")
+remotes::install_github("yikaizhang/hdstats")
 ```
 
 A C++ compiler is required (Rtools on Windows, Xcode CLT on macOS, `r-base-dev`
@@ -49,7 +49,7 @@ Each model ships with:
 ### Huber regression
 
 ```r
-library(hdststs)
+library(hdstats)
 set.seed(1)
 n <- 100; p <- 200
 x <- matrix(rnorm(n * p), n, p)

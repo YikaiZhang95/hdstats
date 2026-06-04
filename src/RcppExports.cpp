@@ -12,7 +12,7 @@ Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 
 // hdsvm_cd_cpp
 List hdsvm_cd_cpp(double alpha, double lam2, double hval, int nobs, int nvars, NumericMatrix X, NumericVector y, IntegerVector jd, int pfncol, NumericMatrix pf, NumericVector pf2, int dfmax, int pmax, int nlam, double flmin, NumericVector ulam, double eps, int isd, int maxit, double sigma, int is_exact);
-RcppExport SEXP _hdststs_hdsvm_cd_cpp(SEXP alphaSEXP, SEXP lam2SEXP, SEXP hvalSEXP, SEXP nobsSEXP, SEXP nvarsSEXP, SEXP XSEXP, SEXP ySEXP, SEXP jdSEXP, SEXP pfncolSEXP, SEXP pfSEXP, SEXP pf2SEXP, SEXP dfmaxSEXP, SEXP pmaxSEXP, SEXP nlamSEXP, SEXP flminSEXP, SEXP ulamSEXP, SEXP epsSEXP, SEXP isdSEXP, SEXP maxitSEXP, SEXP sigmaSEXP, SEXP is_exactSEXP) {
+RcppExport SEXP _hdstats_hdsvm_cd_cpp(SEXP alphaSEXP, SEXP lam2SEXP, SEXP hvalSEXP, SEXP nobsSEXP, SEXP nvarsSEXP, SEXP XSEXP, SEXP ySEXP, SEXP jdSEXP, SEXP pfncolSEXP, SEXP pfSEXP, SEXP pf2SEXP, SEXP dfmaxSEXP, SEXP pmaxSEXP, SEXP nlamSEXP, SEXP flminSEXP, SEXP ulamSEXP, SEXP epsSEXP, SEXP isdSEXP, SEXP maxitSEXP, SEXP sigmaSEXP, SEXP is_exactSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -43,7 +43,7 @@ END_RCPP
 }
 // huber_path_cpp
 List huber_path_cpp(double alpha, double lam2, double hval, NumericVector maj, double mval, NumericMatrix X, NumericVector y, IntegerVector ju, int pfncol, NumericMatrix pf, NumericVector pf2, int dfmax, int pmax, int nlam, double flmin, NumericVector ulam, double eps, int maxit, int istrong);
-RcppExport SEXP _hdststs_huber_path_cpp(SEXP alphaSEXP, SEXP lam2SEXP, SEXP hvalSEXP, SEXP majSEXP, SEXP mvalSEXP, SEXP XSEXP, SEXP ySEXP, SEXP juSEXP, SEXP pfncolSEXP, SEXP pfSEXP, SEXP pf2SEXP, SEXP dfmaxSEXP, SEXP pmaxSEXP, SEXP nlamSEXP, SEXP flminSEXP, SEXP ulamSEXP, SEXP epsSEXP, SEXP maxitSEXP, SEXP istrongSEXP) {
+RcppExport SEXP _hdstats_huber_path_cpp(SEXP alphaSEXP, SEXP lam2SEXP, SEXP hvalSEXP, SEXP majSEXP, SEXP mvalSEXP, SEXP XSEXP, SEXP ySEXP, SEXP juSEXP, SEXP pfncolSEXP, SEXP pfSEXP, SEXP pf2SEXP, SEXP dfmaxSEXP, SEXP pmaxSEXP, SEXP nlamSEXP, SEXP flminSEXP, SEXP ulamSEXP, SEXP epsSEXP, SEXP maxitSEXP, SEXP istrongSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -72,7 +72,7 @@ END_RCPP
 }
 // huber_cd_cpp
 List huber_cd_cpp(double alpha, double lam2, double hval, int nobs, int nvars, NumericMatrix X, NumericVector y, IntegerVector jd, int pfncol, NumericMatrix pf, NumericVector pf2, int dfmax, int pmax, int nlam, double flmin, NumericVector ulam, double eps, int isd, int maxit, int istrong);
-RcppExport SEXP _hdststs_huber_cd_cpp(SEXP alphaSEXP, SEXP lam2SEXP, SEXP hvalSEXP, SEXP nobsSEXP, SEXP nvarsSEXP, SEXP XSEXP, SEXP ySEXP, SEXP jdSEXP, SEXP pfncolSEXP, SEXP pfSEXP, SEXP pf2SEXP, SEXP dfmaxSEXP, SEXP pmaxSEXP, SEXP nlamSEXP, SEXP flminSEXP, SEXP ulamSEXP, SEXP epsSEXP, SEXP isdSEXP, SEXP maxitSEXP, SEXP istrongSEXP) {
+RcppExport SEXP _hdstats_huber_cd_cpp(SEXP alphaSEXP, SEXP lam2SEXP, SEXP hvalSEXP, SEXP nobsSEXP, SEXP nvarsSEXP, SEXP XSEXP, SEXP ySEXP, SEXP jdSEXP, SEXP pfncolSEXP, SEXP pfSEXP, SEXP pf2SEXP, SEXP dfmaxSEXP, SEXP pmaxSEXP, SEXP nlamSEXP, SEXP flminSEXP, SEXP ulamSEXP, SEXP epsSEXP, SEXP isdSEXP, SEXP maxitSEXP, SEXP istrongSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -102,7 +102,7 @@ END_RCPP
 }
 // huber_drv_cpp
 NumericVector huber_drv_cpp(const NumericMatrix& X, const NumericVector& r, const double hval);
-RcppExport SEXP _hdststs_huber_drv_cpp(SEXP XSEXP, SEXP rSEXP, SEXP hvalSEXP) {
+RcppExport SEXP _hdstats_huber_drv_cpp(SEXP XSEXP, SEXP rSEXP, SEXP hvalSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -115,7 +115,7 @@ END_RCPP
 }
 // lqr_hd_cpp
 List lqr_hd_cpp(double alpha, double lam2, double hval, int nobs, int nvars, NumericMatrix X, NumericVector y, double tau, IntegerVector jd, int pfncol, NumericMatrix pf, NumericVector pf2, int dfmax, int pmax, int nlam, double flmin, NumericVector ulam, double eps, int isd, int maxit, double sigma, int is_exact);
-RcppExport SEXP _hdststs_lqr_hd_cpp(SEXP alphaSEXP, SEXP lam2SEXP, SEXP hvalSEXP, SEXP nobsSEXP, SEXP nvarsSEXP, SEXP XSEXP, SEXP ySEXP, SEXP tauSEXP, SEXP jdSEXP, SEXP pfncolSEXP, SEXP pfSEXP, SEXP pf2SEXP, SEXP dfmaxSEXP, SEXP pmaxSEXP, SEXP nlamSEXP, SEXP flminSEXP, SEXP ulamSEXP, SEXP epsSEXP, SEXP isdSEXP, SEXP maxitSEXP, SEXP sigmaSEXP, SEXP is_exactSEXP) {
+RcppExport SEXP _hdstats_lqr_hd_cpp(SEXP alphaSEXP, SEXP lam2SEXP, SEXP hvalSEXP, SEXP nobsSEXP, SEXP nvarsSEXP, SEXP XSEXP, SEXP ySEXP, SEXP tauSEXP, SEXP jdSEXP, SEXP pfncolSEXP, SEXP pfSEXP, SEXP pf2SEXP, SEXP dfmaxSEXP, SEXP pmaxSEXP, SEXP nlamSEXP, SEXP flminSEXP, SEXP ulamSEXP, SEXP epsSEXP, SEXP isdSEXP, SEXP maxitSEXP, SEXP sigmaSEXP, SEXP is_exactSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -147,15 +147,15 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_hdststs_hdsvm_cd_cpp", (DL_FUNC) &_hdststs_hdsvm_cd_cpp, 21},
-    {"_hdststs_huber_path_cpp", (DL_FUNC) &_hdststs_huber_path_cpp, 19},
-    {"_hdststs_huber_cd_cpp", (DL_FUNC) &_hdststs_huber_cd_cpp, 20},
-    {"_hdststs_huber_drv_cpp", (DL_FUNC) &_hdststs_huber_drv_cpp, 3},
-    {"_hdststs_lqr_hd_cpp", (DL_FUNC) &_hdststs_lqr_hd_cpp, 22},
+    {"_hdstats_hdsvm_cd_cpp", (DL_FUNC) &_hdstats_hdsvm_cd_cpp, 21},
+    {"_hdstats_huber_path_cpp", (DL_FUNC) &_hdstats_huber_path_cpp, 19},
+    {"_hdstats_huber_cd_cpp", (DL_FUNC) &_hdstats_huber_cd_cpp, 20},
+    {"_hdstats_huber_drv_cpp", (DL_FUNC) &_hdstats_huber_drv_cpp, 3},
+    {"_hdstats_lqr_hd_cpp", (DL_FUNC) &_hdstats_lqr_hd_cpp, 22},
     {NULL, NULL, 0}
 };
 
-RcppExport void R_init_hdststs(DllInfo *dll) {
+RcppExport void R_init_hdstats(DllInfo *dll) {
     R_registerRoutines(dll, NULL, CallEntries, NULL, NULL);
     R_useDynamicSymbols(dll, FALSE);
 }

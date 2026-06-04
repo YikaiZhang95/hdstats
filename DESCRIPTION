@@ -1,4 +1,4 @@
-Package: hdststs
+Package: hdstats
 Type: Package
 Title: High-Dimensional Smoothed SVM, Quantile, and Huber Regression (Rcpp)
 Version: 0.1.0
