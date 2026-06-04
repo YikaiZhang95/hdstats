@@ -1,0 +1,21 @@
+# R
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+*.Rproj
+
+# Compiled objects
+*.o
+*.so
+*.dll
+*.a
+
+# Build artifacts
+*.tar.gz
+..Rcheck/
+/src/*.o
+/src/*.so
+
+# OS
+.DS_Store

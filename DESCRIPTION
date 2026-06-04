@@ -1,0 +1,17 @@
+Package: hdststs
+Type: Package
+Title: High-Dimensional Smoothed SVM, Quantile, and Huber Regression (Rcpp)
+Version: 0.1.0
+Authors@R: c(person(given = "Yikai", family = "Zhang", role = c("aut","cre"),
+                    email = "yikai-zhang@uiowa.edu"))
+Description: A unified package combining the hdhuber, hdsvm, and hdqr solvers for
+    high-dimensional penalized Huber regression, support vector machines, and
+    quantile regression. The coordinate-descent kernels are implemented in C++
+    via Rcpp (translated from the original Fortran), using uniform-density
+    convolution smoothing.
+License: GPL (>= 2)
+Encoding: UTF-8
+Depends: R (>= 3.6)
+LinkingTo: Rcpp
+Imports: Rcpp, Matrix, methods
+RoxygenNote: 7.3.2.9000
