@@ -36,6 +36,7 @@ on Linux).
 | `hdhuber()` | Huber             | continuous     | `delta` (transition point) |
 | `hdsvm()`   | hinge (SVM)       | binary `{-1,1}`| `hval` (smoothing) |
 | `hdqr()`    | quantile / check  | continuous     | `tau` (quantile), `hval` |
+| `hdrr()`    | Wilcoxon rank     | continuous     | — (built on `hdqr`) |
 
 Each model ships with:
 
@@ -43,6 +44,8 @@ Each model ships with:
 - `predict()` / `coef()` — S3 methods
 - `nc.hdsvm()` / `nc.hdqr()` — non-convex (SCAD / MCP) penalties via the local
   linear approximation
+- `hdrr()` — canonical Wilcoxon rank regression, solved as median quantile
+  regression on pairwise differences (reuses the `hdqr` `coef`/`predict` methods)
 
 ## Usage
 
@@ -86,6 +89,19 @@ coef(cvfit, s = cvfit$lambda.1se)
 ncfit <- nc.hdqr(x, y, tau = 0.5, lambda = fit$lambda[1:10], lam2 = 0.01, pen = "mcp")
 ```
 
+### Wilcoxon rank regression
+
+Canonical (Wilcoxon) rank regression is the median quantile-regression objective
+on all pairwise differences of the data, so `hdrr()` builds the differenced
+design and calls `hdqr()` internally. The returned object inherits the `hdqr`
+`coef`/`predict` methods.
+
+```r
+fit <- hdrr(x, y, lam2 = 0.01)
+coef(fit, s = fit$lambda[5])
+predict(fit, newx = x[1:5, ], s = fit$lambda[5])
+```
+
 ## Performance
 
 The C++ kernels are benchmarked against the original Fortran implementations
@@ -113,8 +129,7 @@ objective values match to within solver tolerance.
 
 The finite smoothing algorithm is described in:
 
-> *A Fast Loss Minimization Algorithm via Uniform Density Convolution*
-> (Finite Smoothing Algorithm for High-Dimensional SVM and Quantile Regression).
+> *Finite smoothing algorithm for high-dimensional support vector machines and quantile regression*.
 
 ## License
 
