@@ -1,7 +1,7 @@
 # hdstats
 
 <!-- badges: start -->
-[![R-CMD-check](https://github.com/yikaizhang/hdstats/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/yikaizhang/hdstats/actions/workflows/R-CMD-check.yaml)
+[![R-CMD-check](https://github.com/YikaiZhang95/hdstats/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/YikaiZhang95/hdstats/actions/workflows/R-CMD-check.yaml)
 [![License: GPL v2](https://img.shields.io/badge/License-GPLv2-blue.svg)](https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html)
 <!-- badges: end -->
 
@@ -23,7 +23,7 @@ results are equivalent to the originals (see [Correctness](#correctness)).
 
 ```r
 # install.packages("remotes")
-remotes::install_github("yikaizhang/hdstats")
+remotes::install_github("YikaiZhang95/hdstats")
 ```
 
 A C++ compiler is required (Rtools on Windows, Xcode CLT on macOS, `r-base-dev`
