@@ -100,6 +100,9 @@ design and calls `hdqr()` internally. The returned object inherits the `hdqr`
 fit <- hdrr(x, y, lam2 = 0.01)
 coef(fit, s = fit$lambda[5])
 predict(fit, newx = x[1:5, ], s = fit$lambda[5])
+
+cvfit <- cv.hdrr(x, y, lam2 = 0.01)
+coef(cvfit, s = "lambda.min")
 ```
 
 ## Performance

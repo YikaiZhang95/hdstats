@@ -36,6 +36,7 @@ S3method(predict, cv.nc.hdsvm)
 
 # ---- rank regression (Wilcoxon) ----
 export(hdrr)
+export(cv.hdrr)
 
 # ---- hdqr ----
 export(hdqr)
