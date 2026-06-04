@@ -35,10 +35,10 @@
 #' @export
 #' @examples
 #' set.seed(1)
-#' n <- 50; p <- 100
+#' n <- 40; p <- 20
 #' x <- matrix(rnorm(n * p), n, p)
 #' y <- x[, 1] * 2 - x[, 2] * 1.5 + rnorm(n)
-#' cv.fit <- cv.hdrr(x, y, lam2 = 0.01)
+#' cv.fit <- cv.hdrr(x, y, lam2 = 0.01, nfolds = 3)
 #' coef(cv.fit, s = "lambda.min")
 cv.hdrr <- function(x, y, lambda = NULL, nfolds = 5L, foldid, ...) {
   y <- drop(y)
