@@ -17,6 +17,9 @@ packages. This supplies content for the (currently empty) **Section 6,
   `hqreg`), and `hdsvm` is **substantially more accurate than `sparseSVM`**
   (test error ≈ 0.19 vs ≈ 0.31) because the finite-smoothing algorithm recovers
   the *exact* hinge solution rather than a fixed approximation.
+* **The solutions are exact.** Against `CVXR` (a general convex solver) the
+  `hdsvm`/`hdqr`/`hdrr` optima agree with the exact penalized objective to
+  ~0.1–0.3% for SVM, quantile, and rank regression.
 
 ![benchmark](results/hdstats_benchmark.png)
 
@@ -27,21 +30,25 @@ packages. This supplies content for the (currently empty) **Section 6,
 | R | 4.3.3 |
 | compiler | g++ 13.3, `-O2`, single-threaded |
 | `hdstats` | 0.1.0 |
-| competitors | `sparseSVM` 1.1.7, `hqreg` 1.4.1, `conquer` 1.3.3 |
+| path competitors | `sparseSVM` 1.1.7, `hqreg` 1.4.1, `conquer` 1.3.3 |
+| exact reference | `CVXR` 1.0.15 (ECOS solver) |
 | references available | `quantreg` 5.97, `glmnet` 4.1.8, `e1071` 1.7.14, `MASS` |
 
 ## Which packages, and why
 
 The paper positions `hdstats` against general SVM/QR/Huber/rank tools. For a
-*fair, like-for-like* comparison we use the packages that, like `hdstats`,
-fit **penalized, high-dimensional, regularization-path** versions of the **same
-loss**:
+*fair, like-for-like* comparison we use two kinds of competitor: specialized
+packages that, like `hdstats`, fit **penalized, high-dimensional,
+regularization-path** versions of the **same loss** (compared on *speed*), and
+the general convex solver `CVXR`, which gives the **exact** penalized optimum at
+a fixed λ (compared on *solution agreement*).
 
-| `hdstats` | direct competitor(s) | what they solve |
-|-----------|----------------------|-----------------|
-| `hdsvm`   | `sparseSVM`          | sparse penalized linear SVM (hinge), λ-path |
-| `hdqr`    | `hqreg` (`method="quantile"`), `conquer` | penalized quantile regression, λ-path |
-| `hdhuber` | `hqreg` (`method="huber"`) | penalized Huber regression, λ-path |
+| `hdstats` | path competitor(s) | exact reference | what they solve |
+|-----------|--------------------|-----------------|-----------------|
+| `hdsvm`   | `sparseSVM`        | `CVXR` | sparse penalized linear SVM (hinge), λ-path |
+| `hdqr`    | `hqreg` (`method="quantile"`), `conquer` | `CVXR` | penalized quantile regression, λ-path |
+| `hdhuber` | `hqreg` (`method="huber"`) | — | penalized Huber regression, λ-path |
+| `hdrr`    | — (no specialized high-dim solver) | `CVXR` | penalized Wilcoxon rank regression |
 
 (`quantreg::rq`, `e1071::svm`, `MASS::rlm` are classical, non-path, non-sparse
 fitters and are not the right speed comparison; they are installed by
@@ -114,6 +121,24 @@ mean of 10 reps).
   `hdsvm` 0.190 / df 71 vs `sparseSVM` 0.306 / df 67), confirming it is not a
   tuning artifact — it reflects exact vs approximate hinge minimization.
 
+## Part 4 — Exact-solution check vs `CVXR` (`05_cvxr_exact.R`)
+
+`CVXR` solves a disciplined-convex-programming formulation of each penalized
+problem with the ECOS conic solver, giving the *exact* optimum at a fixed λ. We
+compare it against `hdstats` fit with `standardize = FALSE` (CVXR penalizes the
+original-scale coefficients) and `is_exact = TRUE` (return the exact, not the
+finitely smoothed, solution) so that both minimize the identical objective.
+
+| model | objective (`hdstats`) | objective (`CVXR`) | relative diff |
+|-------|----------------------:|-------------------:|--------------:|
+| SVM      | 0.407713 | 0.407110 | 0.0015 |
+| Quantile | 0.593223 | 0.592370 | 0.0014 |
+| Rank     | 0.127371 | 0.127011 | 0.0028 |
+
+Across all three losses the `hdstats` optimum matches the exact convex solution
+to ~0.1–0.3% — i.e. the finite-smoothing solvers (and the differenced-data rank
+solver) recover the true penalized minimizer, not merely an approximation.
+
 ## Reproducing
 
 ```r
@@ -125,6 +150,7 @@ source("01_paper_examples.R") # verify the manuscript examples
 source("02_speed.R")          # ~3 min; writes results/bench_speed*.csv
 source("03_accuracy.R")       # writes results/bench_accuracy.csv
 source("04_plot.R")           # writes results/hdstats_benchmark.png
+source("05_cvxr_exact.R")     # exact-solution check; writes results/bench_cvxr_exact.csv
 ```
 
 Raw outputs are checked in under [`results/`](results/).
