@@ -96,6 +96,23 @@ What the timings show:
   exact LP on all pairwise differences (quantreg) takes as long as the whole
   `hdrr()` path at n = 400.
 
+**A Newton-type coordinate step was evaluated and not adopted.** The
+majorization step of the finite smoothing algorithm uses the curvature
+bound mean(x_k^2) for every coordinate; hqreg's semismooth Newton step uses
+instead the curvature of the smoothed loss along the coordinate (the mean
+of x_ik^2 over the residuals inside the band), with a continuation term when
+few residuals are in band. We implemented this step in the Huber kernel
+together with a safeguard that replaces a step by the majorization step
+whenever the directional derivative of the coordinate objective changes
+sign (this restores monotone descent; without it the step cycles on some
+of the package's own test problems). On the speed-benchmark data with
+delta = 1 the Newton-type step reduced the number of coordinate-descent
+passes by 10-20% only, because most residuals lie inside the band once the
+fit is good, and by about 45% with delta = 0.1; the extra pass that
+computes the curvature costs about as much as the whole majorization
+update, so the wall time increased in every setting (500 x 2000, t3
+errors: 2.1 s against 0.8 s). The majorization step is therefore kept.
+
 ### 2. Optimization quality
 
 For the same `lambda` values (five positions along the 100-value path) and

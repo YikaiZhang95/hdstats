@@ -4,7 +4,7 @@
 \alias{cv.hdsvm}
 \title{Cross-validation for Selecting the Tuning Parameter in the Penalized SVM}
 \usage{
-cv.hdsvm(x, y, lambda = NULL, nfolds = 5L, foldid, ...)
+cv.hdsvm(x, y, lambda = NULL, nfolds = 5L, foldid, ncores = 1L, ...)
 }
 \arguments{
 \item{x}{A numerical matrix with \eqn{n} rows (observations) and \eqn{p}
@@ -21,6 +21,11 @@ The smallest allowed value is 3.}
 \item{foldid}{Optional vector of values between 1 and \code{nfolds}
 identifying the fold of each observation. If provided, it overrides
 \code{nfolds}.}
+
+\item{ncores}{Number of processes used to fit the folds in parallel
+(with the \pkg{parallel} package: forked processes on Unix-alikes, a
+socket cluster on Windows). Default is 1, i.e. the folds are fitted
+sequentially.}
 
 \item{...}{Additional arguments passed to \code{\link{hdsvm}}.}
 }

@@ -2,6 +2,7 @@
 #include <cmath>
 #include <algorithm>
 #include <vector>
+#include "hd_kernels.h"
 
 using namespace Rcpp;
 
@@ -12,16 +13,6 @@ using namespace Rcpp;
 
 inline double sign_copy(double a, double b) {
   return (b >= 0.0) ? std::abs(a) : -std::abs(a);
-}
-
-// Smoothed check-loss derivative wrt residual r (onemh=-h, oneph=+h):
-//   dl = -(tau-1)                       if r < -h
-//   dl = -tau                           if r >  +h
-//   dl = -r*0.5/h - tau + 0.5           otherwise
-inline double qr_dl(double r, double tau, double hinv, double onemh, double oneph) {
-  if (r < onemh) return -(tau - 1.0);
-  if (r > oneph) return -tau;
-  return -r * 0.5 * hinv - tau + 0.5;
 }
 
 static IntegerVector chkvars_cpp(const NumericMatrix& X) {
@@ -62,7 +53,7 @@ static void lqr_drv(const NumericMatrix& X, double tau, const double* r,
     else if (r[i] > oneph) dl[i] = -tau;
     else dl[i] = -tau + 0.5;
   }
-  for (int j = 0; j < p; ++j) { const double* xj = &X(0, j); double s = 0.0; for (int i = 0; i < n; ++i) s += dl[i] * xj[i]; vl[j] = s * ninv; }
+  for (int j = 0; j < p; ++j) vl[j] = hd::dot(dl.data(), &X(0, j), n) * ninv;
 }
 
 // check-loss objective: rho_tau(y - ka - intcpt); obj = lam2/2*bb + mean(rho) + lam1*ab
@@ -121,8 +112,11 @@ static List lqr_path(double alpha, double lam2_in, double hval_in, NumericVector
   const double ninv = 1.0 / n, projeps = n * eps;
   const double* yp = y.begin();
 
-  std::vector<double> r(n);
+  std::vector<double> r(n), dl(n);
   for (int i = 0; i < n; ++i) r[i] = yp[i];
+  double* rp = r.data();
+  double* dlp = dl.data();
+  const double dlo = -tau, dhi = 1.0 - tau;
 
   std::vector<double> b(p + 1, 0.0), oldbeta(p + 1, 0.0), maj(p, 0.0);
   std::vector<double> ga(p, 0.0), vl(p, 0.0), sx(p, 0.0), ka(n), theta(n, 0.0);
@@ -177,7 +171,7 @@ static List lqr_path(double alpha, double lam2_in, double hval_in, NumericVector
       hval_id += 1;
       double hinv = 1.0 / hval, mval = hinv * 0.5;
       for (int j = 0; j < p; ++j) maj[j] = maj0[j] * mval;
-      double onemh = -hval, oneph = hval;
+      hd::qr_refresh(rp, dlp, n, hinv, tau, dlo, dhi);
 
       oldbeta[0] = b[0];
       for (int t = 0; t < ni; ++t) oldbeta[m[t]] = b[m[t]];
@@ -187,19 +181,17 @@ static List lqr_path(double alpha, double lam2_in, double hval_in, NumericVector
         for (int k = 1; k <= p; ++k) {
           if (ju[k - 1] == 0) continue;
           const double* xk = &X(0, k - 1);
-          double oldb = b[k], u = 0.0;
-          for (int i = 0; i < n; ++i) u += qr_dl(r[i], tau, hinv, onemh, oneph) * xk[i];
-          u = maj[k - 1] * b[k] - u * ninv;
+          double oldb = b[k];
+          double u = maj[k - 1] * b[k] - hd::dot(dlp, xk, n) * ninv;
           double v = std::abs(u) - al * pf(k - 1, pfl);
           b[k] = (v > 0.0) ? sign_copy(v, u) / (pf2[k - 1] * lam2 + maj[k - 1]) : 0.0;
           double d = b[k] - oldb;
-          if (d != 0.0) { dif = std::max(dif, d * d); for (int i = 0; i < n; ++i) r[i] -= xk[i] * d;
+          if (d != 0.0) { dif = std::max(dif, d * d); hd::qr_axpy(xk, rp, dlp, n, d, hinv, tau, dlo, dhi);
             if (mm[k - 1] == 0) { ni += 1; if (ni > pmax) { jerr = -10000 - (l + 1); goto done; } mm[k - 1] = ni; m[ni - 1] = k; } }
         }
         {
-          double d = 0.0; for (int i = 0; i < n; ++i) d += qr_dl(r[i], tau, hinv, onemh, oneph);
-          d = -d * ninv / mval;
-          if (d != 0.0) { b[0] += d; for (int i = 0; i < n; ++i) r[i] -= d; dif = std::max(dif, d * d); }
+          double d = -hd::sum(dlp, n) * ninv / mval;
+          if (d != 0.0) { b[0] += d; hd::qr_shift(rp, dlp, n, d, hinv, tau, dlo, dhi); dif = std::max(dif, d * d); }
         }
         if (dif < eps) break;
         { long sp = 0; for (int q = 0; q < nlam; ++q) sp += npass[q]; if (sp > maxit) { jerr = -1; goto done; } }
@@ -208,18 +200,16 @@ static List lqr_path(double alpha, double lam2_in, double hval_in, NumericVector
           npass[l] += 1; double difi = 0.0;
           for (int t = 0; t < ni; ++t) {
             int k = m[t]; const double* xk = &X(0, k - 1);
-            double oldb = b[k], u = 0.0;
-            for (int i = 0; i < n; ++i) u += qr_dl(r[i], tau, hinv, onemh, oneph) * xk[i];
-            u = maj[k - 1] * b[k] - u * ninv;
+            double oldb = b[k];
+            double u = maj[k - 1] * b[k] - hd::dot(dlp, xk, n) * ninv;
             double v = std::abs(u) - al * pf(k - 1, pfl);
             b[k] = (v > 0.0) ? sign_copy(v, u) / (pf2[k - 1] * lam2 + maj[k - 1]) : 0.0;
             double d = b[k] - oldb;
-            if (d != 0.0) { difi = std::max(difi, d * d); for (int i = 0; i < n; ++i) r[i] -= xk[i] * d; }
+            if (d != 0.0) { difi = std::max(difi, d * d); hd::qr_axpy(xk, rp, dlp, n, d, hinv, tau, dlo, dhi); }
           }
           {
-            double d = 0.0; for (int i = 0; i < n; ++i) d += qr_dl(r[i], tau, hinv, onemh, oneph);
-            d = -d * ninv / mval;
-            if (d != 0.0) { b[0] += d; for (int i = 0; i < n; ++i) r[i] -= d; difi = std::max(difi, d * d); }
+            double d = -hd::sum(dlp, n) * ninv / mval;
+            if (d != 0.0) { b[0] += d; hd::qr_shift(rp, dlp, n, d, hinv, tau, dlo, dhi); difi = std::max(difi, d * d); }
           }
           if (difi < eps) break;
           { long sp = 0; for (int q = 0; q < nlam; ++q) sp += npass[q]; if (sp > maxit) { jerr = -1; goto done; } }
@@ -234,7 +224,7 @@ static List lqr_path(double alpha, double lam2_in, double hval_in, NumericVector
         double obj0 = objfun(b[0], bb, ab, ka.data(), yp, al, lam2, n, tau);
         double b00 = opt_int(-1e2, 1e2, n, ab, ka.data(), bb, yp, al, lam2, tau);
         double obj1 = objfun(b00, bb, ab, ka.data(), yp, al, lam2, n, tau);
-        if (obj1 < obj0) { double d0 = b00 - b[0]; for (int i = 0; i < n; ++i) r[i] -= d0; b[0] = b00; }
+        if (obj1 < obj0) { double d0 = b00 - b[0]; hd::qr_shift(rp, dlp, n, d0, hinv, tau, dlo, dhi); b[0] = b00; }
       }
       if (ni > pmax) { jerr = -10000 - (l + 1); goto done; }
 
@@ -267,7 +257,7 @@ static List lqr_path(double alpha, double lam2_in, double hval_in, NumericVector
               const double* xk = &X(0, k - 1); double oldb = b[k];
               if (eset[k - 1] == 1) b[k] = 0.0;
               else {
-                double u = 0.0; for (int i = 0; i < n; ++i) u += qr_dl(r[i], tau, hinv, onemh, oneph) * xk[i];
+                double u = hd::dot(dlp, xk, n);
                 double mb = 0.0;
                 if (si > 0) { double s2 = 0.0, mbacc = 0.0; for (int t = 0; t < si; ++t) { int idx = sset[t]; s2 += xk[idx] * xk[idx]; mbacc += xk[idx] * (theta[t] + sigma * r[idx]); } sx[k - 1] = s2; mb = mbacc + sigma * s2 * b[k]; }
                 u = mb + maj[k - 1] * b[k] - u * ninv;
@@ -276,13 +266,13 @@ static List lqr_path(double alpha, double lam2_in, double hval_in, NumericVector
                 else b[k] = 0.0;
               }
               double d = b[k] - oldb;
-              if (d != 0.0) { difp = std::max(difp, d * d); for (int i = 0; i < n; ++i) r[i] -= xk[i] * d;
+              if (d != 0.0) { difp = std::max(difp, d * d); hd::qr_axpy(xk, rp, dlp, n, d, hinv, tau, dlo, dhi);
                 if (mm[k - 1] == 0) { ni += 1; if (ni > pmax) { jerr = -10000 - (l + 1); goto done; } mm[k - 1] = ni; m[ni - 1] = k; } }
             }
             {
-              double d = 0.0; for (int i = 0; i < n; ++i) d += qr_dl(r[i], tau, hinv, onemh, oneph); d = -d * ninv;
+              double d = -hd::sum(dlp, n) * ninv;
               if (si > 0) { double acc = 0.0; for (int t = 0; t < si; ++t) acc += theta[t] + sigma * r[sset[t]]; d = (d + acc) / (sigma * si + mval); } else d = d / mval;
-              if (d != 0.0) { b[0] += d; for (int i = 0; i < n; ++i) r[i] -= d; difp = std::max(difp, d * d); }
+              if (d != 0.0) { b[0] += d; hd::qr_shift(rp, dlp, n, d, hinv, tau, dlo, dhi); difp = std::max(difp, d * d); }
             }
             if (si > 0) for (int t = 0; t < si; ++t) theta[t] += sigma * r[sset[t]];
             if (difp < eps) break;
@@ -294,7 +284,7 @@ static List lqr_path(double alpha, double lam2_in, double hval_in, NumericVector
                 int k = m[t]; const double* xk = &X(0, k - 1); double oldb = b[k];
                 if (eset[k - 1] == 1) b[k] = 0.0;
                 else {
-                  double u = 0.0; for (int i = 0; i < n; ++i) u += qr_dl(r[i], tau, hinv, onemh, oneph) * xk[i];
+                  double u = hd::dot(dlp, xk, n);
                   double mb = 0.0;
                   if (si > 0) { double mbacc = 0.0; for (int tt = 0; tt < si; ++tt) { int idx = sset[tt]; mbacc += xk[idx] * (theta[tt] + sigma * r[idx]); } mb = mbacc + sigma * sx[k - 1] * b[k]; }
                   u = mb + maj[k - 1] * b[k] - u * ninv;
@@ -303,12 +293,12 @@ static List lqr_path(double alpha, double lam2_in, double hval_in, NumericVector
                   else b[k] = 0.0;
                 }
                 double d = b[k] - oldb;
-                if (d != 0.0) { difpi = std::max(difpi, d * d); for (int i = 0; i < n; ++i) r[i] -= xk[i] * d; }
+                if (d != 0.0) { difpi = std::max(difpi, d * d); hd::qr_axpy(xk, rp, dlp, n, d, hinv, tau, dlo, dhi); }
               }
               {
-                double d = 0.0; for (int i = 0; i < n; ++i) d += qr_dl(r[i], tau, hinv, onemh, oneph); d = -d * ninv;
+                double d = -hd::sum(dlp, n) * ninv;
                 if (si > 0) { double acc = 0.0; for (int t = 0; t < si; ++t) acc += theta[t] + sigma * r[sset[t]]; d = (d + acc) / (sigma * si + mval); } else d = d / mval;
-                if (d != 0.0) { b[0] += d; for (int i = 0; i < n; ++i) r[i] -= d; difpi = std::max(difpi, d * d); }
+                if (d != 0.0) { b[0] += d; hd::qr_shift(rp, dlp, n, d, hinv, tau, dlo, dhi); difpi = std::max(difpi, d * d); }
               }
               if (si > 0) for (int t = 0; t < si; ++t) theta[t] += sigma * r[sset[t]];
               if (difpi < projeps) break;

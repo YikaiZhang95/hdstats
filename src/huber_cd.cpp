@@ -1,16 +1,12 @@
 #include <Rcpp.h>
 #include <cmath>
 #include <algorithm>
+#include "hd_kernels.h"
 
 using namespace Rcpp;
 using namespace std;
 
 // --------------------------- small utilities ---------------------------
-
-// Branch-free clamp: compiles to SIMD min/max instructions
-inline double clip_huber(double r, double h) {
-  return r > h ? h : (r < -h ? -h : r);
-}
 
 // return a with the sign of b (Fortran SIGN(a,b))
 inline double sign_copy(double a, double b) {
@@ -39,13 +35,10 @@ static NumericVector huber_drv_internal(const NumericMatrix& X,
   const double ninv = 1.0 / static_cast<double>(n);
   NumericVector vl(p);
   std::vector<double> dl(n);
-  for (int i = 0; i < n; ++i) dl[i] = clip_huber(r[i], hval);
-  for (int j = 0; j < p; ++j) {
-    double s = 0.0;
-    const double* colj = &X(0, j);
-    for (int i = 0; i < n; ++i) s += colj[i] * dl[i];
-    vl[j] = -s * ninv;
-  }
+  const double* rp = r.begin();
+  double* dlp = dl.data();
+  for (int i = 0; i < n; ++i) dlp[i] = hd::clip(rp[i], hval);
+  for (int j = 0; j < p; ++j) vl[j] = -hd::dot(&X(0, j), dlp, n) * ninv;
   return vl;
 }
 
@@ -107,54 +100,33 @@ static void standardize_cpp(NumericMatrix& X,
 
 // --------------------------- CD update helpers ---------------------------
 
-// Soft-threshold update for one variable.
-// Uses pre-maintained dl[] for the gradient; updates r[] and dl[] in-place.
-// No loop-carried dependency -> both passes are SIMD-vectorizable.
+// Coordinate update for one variable.  Pass 1 computes the gradient from the
+// maintained derivatives dl[] (one dot product); pass 2 updates r[] and dl[]
+// in place.  The curvature majk = mean(x_k^2) is an upper bound of the
+// curvature of the smoothed loss along the coordinate (majorization step).
 // Returns d^2 (0 if unchanged).
 inline double update_coord(const double* xk, int n,
                            double& bk,
                            double* r_ptr, double* dl_ptr,
                            double majk, double hval,
                            double al_pfk, double lam2_pf2k, double ninv) {
-  // Pass 1: dot product using pre-clipped dl (vectorizable reduction)
-  double u = 0.0;
-  for (int i = 0; i < n; ++i) u -= dl_ptr[i] * xk[i];
-  u = majk * bk - u * ninv;
-
-  const double v = std::abs(u) - al_pfk;
-  const double new_bk = (v > 0.0) ? sign_copy(v, u) / (majk + lam2_pf2k) : 0.0;
+  const double z = majk * bk + hd::dot(dl_ptr, xk, n) * ninv;
+  const double v = std::abs(z) - al_pfk;
+  const double new_bk = (v > 0.0) ? sign_copy(v, z) / (majk + lam2_pf2k) : 0.0;
   const double d = new_bk - bk;
   bk = new_bk;
   if (d == 0.0) return 0.0;
-
-  // Pass 2: SAXPY on r and clip-update dl - NO loop-carried dependency -> vectorizable
-  for (int i = 0; i < n; ++i) {
-    const double ri = r_ptr[i] - xk[i] * d;
-    r_ptr[i] = ri;
-    dl_ptr[i] = clip_huber(ri, hval);
-  }
+  hd::huber_axpy(xk, r_ptr, dl_ptr, n, d, hval);
   return d * d;
 }
 
-// Intercept update.
-// Recomputes sum_dl from scratch (vectorizable reduction), then updates r and dl.
-// Returns d^2 (0 if no change).
+// Intercept update.  Returns d^2 (0 if no change).
 inline double update_intercept(double& b0, double* r_ptr, double* dl_ptr, int n,
-                                double hval, double ninv, double mval) {
-  // Vectorizable reduction over pre-maintained dl
-  double sum_dl = 0.0;
-  for (int i = 0; i < n; ++i) sum_dl += dl_ptr[i];
-
-  const double d = sum_dl * ninv / mval;
+                               double hval, double ninv, double mval) {
+  const double d = hd::sum(dl_ptr, n) * ninv / mval;
   if (d == 0.0) return 0.0;
   b0 += d;
-
-  // SAXPY + clip-update - vectorizable
-  for (int i = 0; i < n; ++i) {
-    const double ri = r_ptr[i] - d;
-    r_ptr[i] = ri;
-    dl_ptr[i] = clip_huber(ri, hval);
-  }
+  hd::huber_shift(r_ptr, dl_ptr, n, d, hval);
   return d * d;
 }
 
@@ -210,7 +182,7 @@ static List huber_path_core(double alpha,
 
   std::vector<double> dl(n);
   double* dl_ptr = dl.data();
-  for (int i = 0; i < n; ++i) dl_ptr[i] = clip_huber(r_ptr[i], hval);
+  for (int i = 0; i < n; ++i) dl_ptr[i] = hd::clip(r_ptr[i], hval);
 
   if (istrong == 1) {
     std::fill(jxx.begin(), jxx.end(), 0);
@@ -284,9 +256,7 @@ static List huber_path_core(double alpha,
 
         for (int k = 0; k < p; ++k) {
           if (jxx[k] == 0 || ju[k] == 0) continue;
-          const double sq_d = update_coord(colptr(k), n, b[k],
-                                           r_ptr, dl_ptr,
-                                           maj[k], hval,
+          const double sq_d = update_coord(colptr(k), n, b[k], r_ptr, dl_ptr, maj[k], hval,
                                            al_pf[k], lam2_pf2[k], ninv);
           dif = std::max(dif, sq_d);
           if (sq_d != 0.0 && mm[k] == 0) {
@@ -309,9 +279,7 @@ static List huber_path_core(double alpha,
 
           for (int t = 0; t < ni; ++t) {
             const int k = m[t] - 1;
-            dif = std::max(dif, update_coord(colptr(k), n, b[k],
-                                             r_ptr, dl_ptr,
-                                             maj[k], hval,
+            dif = std::max(dif, update_coord(colptr(k), n, b[k], r_ptr, dl_ptr, maj[k], hval,
                                              al_pf[k], lam2_pf2[k], ninv));
           }
 

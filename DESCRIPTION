@@ -28,7 +28,7 @@ Encoding: UTF-8
 Language: en-US
 Depends: R (>= 3.6)
 LinkingTo: Rcpp
-Imports: Rcpp, Matrix, methods, stats, graphics
+Imports: Rcpp, Matrix, methods, stats, graphics, parallel
 Suggests: testthat (>= 3.0.0), knitr, rmarkdown, quantreg, e1071
 VignetteBuilder: knitr
 Config/testthat/edition: 3

@@ -43,5 +43,6 @@
 #' @importFrom methods new rbind2
 #' @importFrom stats approx coef predict median
 #' @importFrom graphics segments points axis abline
+#' @importFrom parallel mclapply makeCluster stopCluster parLapply
 #' @keywords internal
 "_PACKAGE"

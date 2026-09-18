@@ -68,6 +68,14 @@ test_that("cross-validation objects have the documented structure", {
   foldid <- rep(1:4, length.out = 60)
   cv <- cv.hdhuber(d$x, d$y, nlambda = 10, foldid = foldid)
   expect_length(cv$cvm, 10)
+  ## parallel folds give the same result as sequential folds
+  cv2 <- cv.hdhuber(d$x, d$y, nlambda = 10, foldid = foldid, ncores = 2)
+  expect_equal(cv2$cvm, cv$cvm)
+  expect_equal(cv2$cvsd, cv$cvsd)
+  cvq <- cv.hdqr(d$x, d$y, nlambda = 10, foldid = foldid, lam2 = 0.1)
+  cvq2 <- cv.hdqr(d$x, d$y, nlambda = 10, foldid = foldid, lam2 = 0.1, ncores = 2)
+  expect_equal(cvq2$cvm, cvq$cvm)
+  expect_error(cv.hdhuber(d$x, d$y, nlambda = 10, ncores = 0), "positive integer")
   expect_error(cv.hdhuber(d$x, d$y, nfolds = 2), "at least 3")
   ## cv.hdsvm with a factor response
   cvf <- cv.hdsvm(d$x, factor(sign(d$y)), nlambda = 10)

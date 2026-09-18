@@ -13,6 +13,10 @@
 #' @param nfolds Number of folds for cross-validation. Defaults to 5.
 #' @param foldid Optional vector identifying the fold of each observation. If
 #'   provided, it overrides \code{nfolds}.
+#' @param ncores Number of processes used to fit the folds in parallel
+#'   (with the \pkg{parallel} package: forked processes on Unix-alikes, a
+#'   socket cluster on Windows). Default is 1, i.e. the folds are fitted
+#'   sequentially.
 #' @param ... Additional arguments passed to \code{\link{hdrr}} (e.g.
 #'   \code{lam2}, \code{pf}, \code{standardize}).
 #'
@@ -42,7 +46,7 @@
 #' y <- x[, 1] * 2 - x[, 2] * 1.5 + rnorm(n)
 #' cv.fit <- cv.hdrr(x, y, lam2 = 0.01, nfolds = 3)
 #' coef(cv.fit, s = "lambda.min")
-cv.hdrr <- function(x, y, lambda = NULL, nfolds = 5L, foldid, ...) {
+cv.hdrr <- function(x, y, lambda = NULL, nfolds = 5L, foldid, ncores = 1L, ...) {
   y <- drop(y)
   x <- as.matrix(x)
   x.row <- as.integer(NROW(x))
@@ -58,12 +62,12 @@ cv.hdrr <- function(x, y, lambda = NULL, nfolds = 5L, foldid, ...) {
   if (nfolds < 3)
     stop("nfolds must be at least 3; nfolds = 5 recommended.")
 
-  outlist <- as.list(seq(nfolds))
-  for (i in seq(nfolds)) {
+  dots <- list(...)
+  outlist <- cv_folds(nfolds, function(i) {
     which <- foldid == i
-    outlist[[i]] <- hdrr(x = x[!which, , drop = FALSE],
-                         y = y[!which], lambda = lambda, ...)
-  }
+    do.call(hdrr, c(list(x = x[!which, , drop = FALSE], y = y[!which],
+                         lambda = lambda), dots))
+  }, ncores)
 
   # rank regression == median QR, so score held-out error with tau = 0.5
   cvstuff <- cvpath.hdqr(outlist, x, y, 0.5, lambda, foldid, x.row, ...)

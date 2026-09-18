@@ -4,7 +4,16 @@
 \alias{cv.nc.hdqr}
 \title{Cross-validation for Selecting the Tuning Parameter of Nonconvex Penalized Quantile Regression}
 \usage{
-cv.nc.hdqr(x, y, lambda = NULL, tau = 0.5, nfolds = 5L, foldid, ...)
+cv.nc.hdqr(
+  x,
+  y,
+  lambda = NULL,
+  tau = 0.5,
+  nfolds = 5L,
+  foldid,
+  ncores = 1L,
+  ...
+)
 }
 \arguments{
 \item{x}{A numerical matrix with \eqn{n} rows (observations) and \eqn{p}
@@ -23,6 +32,11 @@ The smallest allowed value is 3.}
 \item{foldid}{Optional vector of values between 1 and \code{nfolds}
 identifying the fold of each observation. If provided, it overrides
 \code{nfolds}.}
+
+\item{ncores}{Number of processes used to fit the folds in parallel
+(with the \pkg{parallel} package: forked processes on Unix-alikes, a
+socket cluster on Windows). Default is 1, i.e. the folds are fitted
+sequentially.}
 
 \item{...}{Additional arguments passed to \code{\link{nc.hdqr}}
 (e.g. \code{pen}, \code{aval}, \code{lam2}, \code{lla_step}).}

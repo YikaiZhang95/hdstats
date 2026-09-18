@@ -15,6 +15,10 @@
 #' @param foldid Optional vector of values between 1 and \code{nfolds}
 #'   identifying the fold of each observation. If provided, it overrides
 #'   \code{nfolds}.
+#' @param ncores Number of processes used to fit the folds in parallel
+#'   (with the \pkg{parallel} package: forked processes on Unix-alikes, a
+#'   socket cluster on Windows). Default is 1, i.e. the folds are fitted
+#'   sequentially.
 #' @param ... Additional arguments passed to \code{\link{hdqr}}.
 #'
 #' @details
@@ -57,7 +61,8 @@
 #' cv.fit <- cv.hdqr(x = x, y = y, tau = 0.5)
 #' cv.fit
 #' plot(cv.fit)
-cv.hdqr <- function(x, y, lambda = NULL, tau = 0.5, nfolds = 5L, foldid, ...) {
+cv.hdqr <- function(x, y, lambda = NULL, tau = 0.5, nfolds = 5L, foldid,
+                    ncores = 1L, ...) {
   ####################################################################
   ## data setup
   y <- drop(y)
@@ -73,13 +78,13 @@ cv.hdqr <- function(x, y, lambda = NULL, tau = 0.5, nfolds = 5L, foldid, ...) {
     foldid <- sample(rep(seq(nfolds), length = x.row)) else nfolds <- max(foldid)
   if (nfolds < 3)
     stop("nfolds must be at least 3; nfolds = 5 recommended.")
-  outlist <- as.list(seq(nfolds))
   ## fit the model nfold times and save them
-  for (i in seq(nfolds)) {
+  dots <- list(...)
+  outlist <- cv_folds(nfolds, function(i) {
     which <- foldid == i
-    outlist[[i]] <- hdqr(x = x[!which, , drop = FALSE],
-                         y = y[!which], tau = tau, lambda = lambda, ...)
-  }
+    do.call(hdqr, c(list(x = x[!which, , drop = FALSE], y = y[!which],
+                         tau = tau, lambda = lambda), dots))
+  }, ncores)
   ## select the lambda according to predmat
   cvstuff <- cvpath.hdqr(outlist, x, y, tau, lambda, foldid, x.row, ...)
   cvm <- cvstuff$cvm

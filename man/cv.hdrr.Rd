@@ -4,7 +4,7 @@
 \alias{cv.hdrr}
 \title{Cross-validation for Penalized Wilcoxon Rank Regression}
 \usage{
-cv.hdrr(x, y, lambda = NULL, nfolds = 5L, foldid, ...)
+cv.hdrr(x, y, lambda = NULL, nfolds = 5L, foldid, ncores = 1L, ...)
 }
 \arguments{
 \item{x}{A numerical matrix with \eqn{n} rows (observations) and \eqn{p}
@@ -19,6 +19,11 @@ columns (variables).}
 
 \item{foldid}{Optional vector identifying the fold of each observation. If
 provided, it overrides \code{nfolds}.}
+
+\item{ncores}{Number of processes used to fit the folds in parallel
+(with the \pkg{parallel} package: forked processes on Unix-alikes, a
+socket cluster on Windows). Default is 1, i.e. the folds are fitted
+sequentially.}
 
 \item{...}{Additional arguments passed to \code{\link{hdrr}} (e.g.
 \code{lam2}, \code{pf}, \code{standardize}).}

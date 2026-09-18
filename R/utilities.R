@@ -196,3 +196,27 @@ deriv_mcp <- function(u, lambda, a = 2) {
   u <- abs(u) # u must be nonnegative
   (lambda - u / a) * (u <= a * lambda)
 }
+
+## Fit the cross-validation folds, optionally in parallel.
+## FUN(i) fits fold i; the fits are returned as a list in fold order.
+## ncores > 1 uses forked processes (parallel::mclapply) on Unix-alikes and a
+## socket cluster on Windows.
+cv_folds <- function(nfolds, FUN, ncores = 1L) {
+  ncores <- as.integer(ncores)[1L]
+  if (is.na(ncores) || ncores < 1L)
+    stop("ncores must be a positive integer.")
+  ncores <- min(ncores, nfolds)
+  if (ncores == 1L)
+    return(lapply(seq_len(nfolds), FUN))
+  if (.Platform$OS.type == "windows") {
+    cl <- parallel::makeCluster(ncores)
+    on.exit(parallel::stopCluster(cl), add = TRUE)
+    return(parallel::parLapply(cl, seq_len(nfolds), FUN))
+  }
+  res <- parallel::mclapply(seq_len(nfolds), FUN, mc.cores = ncores)
+  bad <- vapply(res, inherits, logical(1L), "try-error")
+  if (any(bad))
+    stop("fitting fold ", which(bad)[1L], " failed: ",
+         conditionMessage(attr(res[[which(bad)[1L]]], "condition")))
+  res
+}

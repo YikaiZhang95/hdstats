@@ -2,6 +2,7 @@
 #include <cmath>
 #include <algorithm>
 #include <vector>
+#include "hd_kernels.h"
 
 using namespace Rcpp;
 
@@ -12,16 +13,6 @@ using namespace Rcpp;
 
 inline double sign_copy(double a, double b) {
   return (b >= 0.0) ? std::abs(a) : -std::abs(a);
-}
-
-// Smoothed-hinge loss derivative wrt margin r:
-//   dl = -1                       if r <= 1 - h
-//   dl = 0.5/h * (r - (1+h))      if r <  1 + h
-//   dl = 0                        otherwise
-inline double svm_dl(double r, double hinv, double onemh, double oneph) {
-  if (r <= onemh) return -1.0;
-  if (r <  oneph) return 0.5 * hinv * (r - oneph);
-  return 0.0;
 }
 
 // --------------------------- chkvars ---------------------------
@@ -72,13 +63,14 @@ static void svm_drv(const NumericMatrix& X, const double* y, const double* r,
   const int n = X.nrow(), p = X.ncol();
   const double ninv = 1.0 / n;
   std::vector<double> dly(n);
-  for (int i = 0; i < n; ++i) dly[i] = svm_dl(r[i], hinv, onemh, oneph) * y[i];
-  for (int j = 0; j < p; ++j) {
-    const double* xj = &X(0, j);
-    double s = 0.0;
-    for (int i = 0; i < n; ++i) s += dly[i] * xj[i];
-    vl[j] = s * ninv;
+  for (int i = 0; i < n; ++i) {
+    double dl;
+    if (r[i] <= onemh) dl = -1.0;
+    else if (r[i] < oneph) dl = 0.5 * hinv * (r[i] - oneph);
+    else dl = 0.0;
+    dly[i] = dl * y[i];
   }
+  for (int j = 0; j < p; ++j) vl[j] = hd::dot(dly.data(), &X(0, j), n) * ninv;
 }
 
 // --------------------------- objective ---------------------------
@@ -167,8 +159,10 @@ static List hdsvm_path(double alpha, double lam2_in, double hval_in,
   const double projeps = n * eps;
   const double* yp = y.begin();
 
-  std::vector<double> r(n), dl(n);
+  std::vector<double> r(n), dly(n);
   for (int i = 0; i < n; ++i) r[i] = yp[i];
+  double* rp = r.data();
+  double* dlyp = dly.data();
 
   std::vector<double> b(p + 1, 0.0), oldbeta(p + 1, 0.0), maj(p, 0.0);
   std::vector<double> ga(p, 0.0), vl(p, 0.0), sx(p, 0.0), ka(n), theta(n, 0.0);
@@ -235,7 +229,8 @@ static List hdsvm_path(double alpha, double lam2_in, double hval_in,
       hval_id += 1;
       double hinv = 1.0 / hval, mval = hinv * 0.5;
       for (int j = 0; j < p; ++j) maj[j] = maj0[j] * mval;
-      double onemh = 1.0 - hval, oneph = 1.0 + hval;
+      double oneph = 1.0 + hval;
+      hd::svm_refresh(rp, yp, dlyp, n, hinv, oneph);
 
       oldbeta[0] = b[0];
       for (int t = 0; t < ni; ++t) oldbeta[m[t]] = b[m[t]];
@@ -248,15 +243,14 @@ static List hdsvm_path(double alpha, double lam2_in, double hval_in,
         for (int k = 1; k <= p; ++k) {
           if (ju[k - 1] == 0) continue;
           const double* xk = &X(0, k - 1);
-          double oldb = b[k], u = 0.0;
-          for (int i = 0; i < n; ++i) u += svm_dl(r[i], hinv, onemh, oneph) * yp[i] * xk[i];
-          u = maj[k - 1] * b[k] - u * ninv;
+          double oldb = b[k];
+          double u = maj[k - 1] * b[k] - hd::dot(dlyp, xk, n) * ninv;
           double v = std::abs(u) - al * pf(k - 1, pfl);
           b[k] = (v > 0.0) ? sign_copy(v, u) / (pf2[k - 1] * lam2 + maj[k - 1]) : 0.0;
           double d = b[k] - oldb;
           if (d != 0.0) {
             dif = std::max(dif, d * d);
-            for (int i = 0; i < n; ++i) r[i] += yp[i] * xk[i] * d;
+            hd::svm_axpy(xk, yp, rp, dlyp, n, d, hinv, oneph);
             if (mm[k - 1] == 0) {
               ni += 1;
               if (ni > pmax) { jerr = -10000 - (l + 1); goto done; }
@@ -267,10 +261,8 @@ static List hdsvm_path(double alpha, double lam2_in, double hval_in,
 
         // intercept
         {
-          double d = 0.0;
-          for (int i = 0; i < n; ++i) d += svm_dl(r[i], hinv, onemh, oneph) * yp[i];
-          d = -d * ninv / mval;
-          if (d != 0.0) { b[0] += d; for (int i = 0; i < n; ++i) r[i] += yp[i] * d; dif = std::max(dif, d * d); }
+          double d = -hd::sum(dlyp, n) * ninv / mval;
+          if (d != 0.0) { b[0] += d; hd::svm_shift(yp, rp, dlyp, n, d, hinv, oneph); dif = std::max(dif, d * d); }
         }
 
         if (dif < eps) break;
@@ -283,19 +275,16 @@ static List hdsvm_path(double alpha, double lam2_in, double hval_in,
           for (int t = 0; t < ni; ++t) {
             int k = m[t];
             const double* xk = &X(0, k - 1);
-            double oldb = b[k], u = 0.0;
-            for (int i = 0; i < n; ++i) u += svm_dl(r[i], hinv, onemh, oneph) * yp[i] * xk[i];
-            u = maj[k - 1] * b[k] - u * ninv;
+            double oldb = b[k];
+            double u = maj[k - 1] * b[k] - hd::dot(dlyp, xk, n) * ninv;
             double v = std::abs(u) - al * pf(k - 1, pfl);
             b[k] = (v > 0.0) ? sign_copy(v, u) / (pf2[k - 1] * lam2 + maj[k - 1]) : 0.0;
             double d = b[k] - oldb;
-            if (d != 0.0) { difi = std::max(difi, d * d); for (int i = 0; i < n; ++i) r[i] += yp[i] * xk[i] * d; }
+            if (d != 0.0) { difi = std::max(difi, d * d); hd::svm_axpy(xk, yp, rp, dlyp, n, d, hinv, oneph); }
           }
           {
-            double d = 0.0;
-            for (int i = 0; i < n; ++i) d += svm_dl(r[i], hinv, onemh, oneph) * yp[i];
-            d = -d * ninv / mval;
-            if (d != 0.0) { b[0] += d; for (int i = 0; i < n; ++i) r[i] += yp[i] * d; difi = std::max(difi, d * d); }
+            double d = -hd::sum(dlyp, n) * ninv / mval;
+            if (d != 0.0) { b[0] += d; hd::svm_shift(yp, rp, dlyp, n, d, hinv, oneph); difi = std::max(difi, d * d); }
           }
           if (difi < eps) break;
           { long sp = 0; for (int q = 0; q < nlam; ++q) sp += npass[q]; if (sp > maxit) { jerr = -1; goto done; } }
@@ -311,7 +300,7 @@ static List hdsvm_path(double alpha, double lam2_in, double hval_in,
         double obj0 = objfun_enetsvm(b[0], bb, ab, ka.data(), yp, al, lam2, n);
         double b00 = opt_int_enetsvm(-1e2, 1e2, n, ab, ka.data(), bb, yp, al, lam2);
         double obj1 = objfun_enetsvm(b00, bb, ab, ka.data(), yp, al, lam2, n);
-        if (obj1 < obj0) { double d0 = b00 - b[0]; for (int i = 0; i < n; ++i) r[i] += yp[i] * d0; b[0] = b00; }
+        if (obj1 < obj0) { double d0 = b00 - b[0]; hd::svm_shift(yp, rp, dlyp, n, d0, hinv, oneph); b[0] = b00; }
       }
       if (ni > pmax) { jerr = -10000 - (l + 1); goto done; }
 
@@ -359,8 +348,7 @@ static List hdsvm_path(double alpha, double lam2_in, double hval_in,
               if (eset[k - 1] == 1) {
                 b[k] = 0.0;
               } else {
-                double u = 0.0;
-                for (int i = 0; i < n; ++i) u += svm_dl(r[i], hinv, onemh, oneph) * yp[i] * xk[i];
+                double u = hd::dot(dlyp, xk, n);
                 double mb = 0.0;
                 if (si > 0) {
                   double s2 = 0.0, mbacc = 0.0;
@@ -381,18 +369,16 @@ static List hdsvm_path(double alpha, double lam2_in, double hval_in,
               double d = b[k] - oldb;
               if (d != 0.0) {
                 difp = std::max(difp, d * d);
-                for (int i = 0; i < n; ++i) r[i] += yp[i] * xk[i] * d;
+                hd::svm_axpy(xk, yp, rp, dlyp, n, d, hinv, oneph);
                 if (mm[k - 1] == 0) { ni += 1; if (ni > pmax) { jerr = -10000 - (l + 1); goto done; } mm[k - 1] = ni; m[ni - 1] = k; }
               }
             }
             // intercept (proj middle)
             {
-              double d = 0.0;
-              for (int i = 0; i < n; ++i) d += svm_dl(r[i], hinv, onemh, oneph) * yp[i];
-              d = -d * ninv;
+              double d = -hd::sum(dlyp, n) * ninv;
               if (si > 0) { double acc = 0.0; for (int t = 0; t < si; ++t) acc += (theta[t] + sigma * (1.0 - r[sset[t]])) / yp[sset[t]]; d = (d + acc) / (sigma * si + mval); }
               else d = d / mval;
-              if (d != 0.0) { b[0] += d; for (int i = 0; i < n; ++i) r[i] += yp[i] * d; difp = std::max(difp, d * d); }
+              if (d != 0.0) { b[0] += d; hd::svm_shift(yp, rp, dlyp, n, d, hinv, oneph); difp = std::max(difp, d * d); }
             }
             if (si > 0) for (int t = 0; t < si; ++t) theta[t] += sigma * (1.0 - r[sset[t]]);
             if (difp < eps) break;
@@ -407,8 +393,7 @@ static List hdsvm_path(double alpha, double lam2_in, double hval_in,
                 double oldb = b[k];
                 if (eset[k - 1] == 1) { b[k] = 0.0; }
                 else {
-                  double u = 0.0;
-                  for (int i = 0; i < n; ++i) u += svm_dl(r[i], hinv, onemh, oneph) * yp[i] * xk[i];
+                  double u = hd::dot(dlyp, xk, n);
                   double mb = 0.0;
                   if (si > 0) {
                     double s2 = 0.0, mbacc = 0.0;
@@ -421,15 +406,13 @@ static List hdsvm_path(double alpha, double lam2_in, double hval_in,
                   else b[k] = 0.0;
                 }
                 double d = b[k] - oldb;
-                if (d != 0.0) { difpi = std::max(difpi, d * d); for (int i = 0; i < n; ++i) r[i] += yp[i] * xk[i] * d; }
+                if (d != 0.0) { difpi = std::max(difpi, d * d); hd::svm_axpy(xk, yp, rp, dlyp, n, d, hinv, oneph); }
               }
               {
-                double d = 0.0;
-                for (int i = 0; i < n; ++i) d += svm_dl(r[i], hinv, onemh, oneph) * yp[i];
-                d = -d * ninv;
+                double d = -hd::sum(dlyp, n) * ninv;
                 if (si > 0) { double acc = 0.0; for (int t = 0; t < si; ++t) acc += (theta[t] + sigma * (1.0 - r[sset[t]])) / yp[sset[t]]; d = (d + acc) / (sigma * si + mval); }
                 else d = d / mval;
-                if (d != 0.0) { b[0] += d; for (int i = 0; i < n; ++i) r[i] += yp[i] * d; difpi = std::max(difpi, d * d); }
+                if (d != 0.0) { b[0] += d; hd::svm_shift(yp, rp, dlyp, n, d, hinv, oneph); difpi = std::max(difpi, d * d); }
               }
               if (si > 0) for (int t = 0; t < si; ++t) theta[t] += sigma * (1.0 - r[sset[t]]);
               if (difpi < projeps) break;
