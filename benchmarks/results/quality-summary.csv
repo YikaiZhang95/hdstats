@@ -1,0 +1,49 @@
+"regime","model","solver","max_rel_gap","median_rel_gap","seconds"
+"n = 200, p = 500","Huber","hdstats::hdhuber (eps = 1e-12)",6.34381501350995e-13,0,0.569000000000003
+"n = 200, p = 500","Huber","hqreg::hqreg_raw (eps = 1e-10)",1.80834475844767e-06,6.07062481766489e-09,0.223999999999997
+"n = 200, p = 500","Huber","hdstats::hdhuber (default)",6.67737406811814e-05,3.15673712099732e-07,0.122
+"n = 200, p = 500","Huber","hqreg::hqreg_raw (default)",0.000660438504769394,3.47077706090921e-06,0.0450000000000017
+"n = 200, p = 500","Quantile (tau = 0.3)","quantreg::rq lasso (LP, exact)",0,0,2.961
+"n = 200, p = 500","Quantile (tau = 0.3)","hdstats::hdqr (is_exact = TRUE)",0.0063110496733562,0.0023533937349938,0.454999999999998
+"n = 200, p = 500","Quantile (tau = 0.3)","hqreg::hqreg_raw (eps = 1e-10)",0.0316373069521165,0.00938643260110556,4.863
+"n = 200, p = 500","Quantile (tau = 0.3)","hdstats::hdqr (default)",0.0481370271453949,0.0136309692150739,0.414999999999992
+"n = 200, p = 500","Quantile (tau = 0.3)","hqreg::hqreg_raw (default)",0.0783643687534475,0.0104019106622374,0.75
+"n = 200, p = 500","Quantile (tau = 0.3)","conquer::conquer.reg (uniform kernel, epsilon = 1e-6)",0.264676163661059,0.0286886854080237,6.202
+"n = 200, p = 500","Quantile (tau = 0.3)","conquer::conquer.reg (Gaussian kernel, default)",0.392316455530371,0.0416632968419374,0.188000000000002
+"n = 200, p = 500","Quantile (tau = 0.5)","quantreg::rq lasso (LP, exact)",0,0,2.881
+"n = 200, p = 500","Quantile (tau = 0.5)","hdstats::hdqr (is_exact = TRUE)",0.00641859935123854,0.00210913432869952,0.332000000000001
+"n = 200, p = 500","Quantile (tau = 0.5)","hqreg::hqreg_raw (eps = 1e-10)",0.041387742334916,0.00471573242493326,5.447
+"n = 200, p = 500","Quantile (tau = 0.5)","hdstats::hdqr (default)",0.0548257820224182,0.0134901331513451,0.336999999999996
+"n = 200, p = 500","Quantile (tau = 0.5)","conquer::conquer.reg (uniform kernel, epsilon = 1e-6)",0.0898936360639544,0.0244357894344904,5.98999999999999
+"n = 200, p = 500","Quantile (tau = 0.5)","hqreg::hqreg_raw (default)",0.102264590275384,0.00887529435488238,1.059
+"n = 200, p = 500","Quantile (tau = 0.5)","conquer::conquer.reg (Gaussian kernel, default)",0.233644894851324,0.0382088490460188,0.192999999999998
+"n = 200, p = 500","SVM","quantreg::rq lasso (LP, exact)",0,0,2.848
+"n = 200, p = 500","SVM","hdstats::hdsvm (default, hval = 1)",1.85121655771543,1.16108232419537,0.0529999999999973
+"n = 200, p = 500","SVM","hdstats::hdsvm (hval = 0.1)",11.0654318378066,1.8367031471921,0.0900000000000034
+"n = 200, p = 500","SVM","hdstats::hdsvm (is_exact = TRUE)",11.5780794436613,1.89832379220306,0.26400000000001
+"n = 200, p = 500","SVM","sparseSVM::sparseSVM (gamma = 0.01, eps = 1e-8)",97.8186378571507,9.46983316357925,1.06800000000001
+"n = 200, p = 500","SVM","sparseSVM::sparseSVM (gamma = 0.1, default)",99.5303869765872,10.0155814876158,0.0360000000000014
+"n = 400, p = 200","Huber","hdstats::hdhuber (eps = 1e-12)",0,0,0.0970000000000002
+"n = 400, p = 200","Huber","hqreg::hqreg_raw (eps = 1e-10)",3.55560943301422e-08,9.24451580108824e-09,0.0600000000000001
+"n = 400, p = 200","Huber","hdstats::hdhuber (default)",2.14701325259482e-06,8.53095958344324e-07,0.0450000000000002
+"n = 400, p = 200","Huber","hqreg::hqreg_raw (default)",3.08224639541382e-05,6.2809695146786e-06,0.0269999999999997
+"n = 400, p = 200","Quantile (tau = 0.3)","quantreg::rq lasso (LP, exact)",0,0,0.521999999999998
+"n = 400, p = 200","Quantile (tau = 0.3)","hdstats::hdqr (is_exact = TRUE)",0.00529829380985284,0.00474745402274335,0.327999999999999
+"n = 400, p = 200","Quantile (tau = 0.3)","hqreg::hqreg_raw (default)",0.0159615969990725,0.00325598380243833,0.359999999999999
+"n = 400, p = 200","Quantile (tau = 0.3)","hqreg::hqreg_raw (eps = 1e-10)",0.0159660532643199,0.00248148395227037,4.117
+"n = 400, p = 200","Quantile (tau = 0.3)","hdstats::hdqr (default)",0.019415522106976,0.0150715517489514,0.308000000000003
+"n = 400, p = 200","Quantile (tau = 0.3)","conquer::conquer.reg (uniform kernel, epsilon = 1e-6)",0.0259163593380823,0.0196386725564592,3.064
+"n = 400, p = 200","Quantile (tau = 0.3)","conquer::conquer.reg (Gaussian kernel, default)",0.0621332794377377,0.0349687767894638,0.104000000000006
+"n = 400, p = 200","Quantile (tau = 0.5)","quantreg::rq lasso (LP, exact)",0,0,0.516
+"n = 400, p = 200","Quantile (tau = 0.5)","hdstats::hdqr (is_exact = TRUE)",0.00484408798991742,0.00332635029866135,0.32
+"n = 400, p = 200","Quantile (tau = 0.5)","hqreg::hqreg_raw (default)",0.0102935707215272,0.0032018598978599,0.353
+"n = 400, p = 200","Quantile (tau = 0.5)","hqreg::hqreg_raw (eps = 1e-10)",0.0102976111747712,0.00162307998160942,3.937
+"n = 400, p = 200","Quantile (tau = 0.5)","hdstats::hdqr (default)",0.0153500245081297,0.0114766595218907,0.296
+"n = 400, p = 200","Quantile (tau = 0.5)","conquer::conquer.reg (uniform kernel, epsilon = 1e-6)",0.0206977547518586,0.0155437170124392,3.274
+"n = 400, p = 200","Quantile (tau = 0.5)","conquer::conquer.reg (Gaussian kernel, default)",0.0398701813687626,0.0293355425842029,0.100999999999999
+"n = 400, p = 200","SVM","quantreg::rq lasso (LP, exact)",0,0,0.734999999999999
+"n = 400, p = 200","SVM","hdstats::hdsvm (default, hval = 1)",2.14008399986105,0.81946351211618,0.644000000000005
+"n = 400, p = 200","SVM","hdstats::hdsvm (is_exact = TRUE)",6.15289292627829,1.12432524008443,1.872
+"n = 400, p = 200","SVM","hdstats::hdsvm (hval = 0.1)",41.898977915931,1.15117575276929,0.872
+"n = 400, p = 200","SVM","sparseSVM::sparseSVM (gamma = 0.1, default)",105.9620941197,1.72772261062131,0.00600000000000023
+"n = 400, p = 200","SVM","sparseSVM::sparseSVM (gamma = 0.01, eps = 1e-8)",107.93023833618,1.81298818748416,0.0429999999999993

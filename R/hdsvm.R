@@ -36,11 +36,12 @@
 #'   quadratic (ridge) penalty on the coefficients. Unlike \code{lambda},
 #'   only one value of \code{lam2} is used for each fitting process.
 #'   Default is 0 (lasso penalty).
-#' @param hval Initial bandwidth of the uniform-kernel convolution smoothing
-#'   of the hinge loss. Default is 1. Inside the algorithm the bandwidth is
+#' @param hval Bandwidth of the uniform-kernel convolution smoothing of the
+#'   hinge loss. Default is 1. With \code{is_exact = TRUE} the bandwidth is
 #'   divided by 8 (at most three times) until the solution satisfies the
 #'   KKT conditions of the original (non-smooth) problem to a fixed
-#'   tolerance; see \code{is_exact}.
+#'   tolerance. Coordinate descent converges more slowly for small
+#'   bandwidths, so values much below the default are not recommended.
 #' @param pf L1 penalty factor of length \eqn{p} used for the adaptive
 #'   lasso or adaptive elastic net. Separate L1 penalty weights can be
 #'   applied to each coefficient to allow different L1 shrinkage.
@@ -76,14 +77,18 @@
 #' @param sigma Penalty parameter of the quadratic term in the augmented
 #'   Lagrangian used by the exact projection step (only used when
 #'   \code{is_exact = TRUE}). Must be positive. Default is 0.9.
-#' @param is_exact Logical. If \code{FALSE} (the default), the minimizer of
-#'   the smoothed problem at the last bandwidth is returned; it satisfies
-#'   the KKT conditions of the hinge-loss problem approximately and its
-#'   hinge-loss objective is typically within a few percent of the optimum.
-#'   If \code{TRUE}, an additional ADMM-type projection step is applied at
-#'   small bandwidths, which yields the exact solution of the hinge-loss
-#'   problem (for \code{lambda = 0} it agrees with the solution of the
-#'   standard linear SVM quadratic program) at a higher computational cost.
+#' @param is_exact Logical. If \code{FALSE} (the default), only the smoothed
+#'   problem at bandwidth \code{hval} is solved and its minimizer is
+#'   returned. If \code{TRUE}, the bandwidth is decreased and an additional
+#'   ADMM-type projection step is applied at small bandwidths, at a higher
+#'   computational cost. Without an L1 penalty (\code{lambda = 0}) the
+#'   \code{is_exact = TRUE} solution agrees with the standard linear SVM
+#'   quadratic program. With an L1 penalty both modes return solutions of a
+#'   smoothed problem: on sparse high-dimensional problems their hinge-loss
+#'   objective can be well above the exact (linear-programming) optimum,
+#'   especially for small \code{lambda}; see the benchmarks in the package
+#'   repository. Cross-validated prediction performance is not affected in
+#'   the same way.
 #'
 #' @details
 #' The penalized SVM problem solved is
