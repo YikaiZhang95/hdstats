@@ -39,7 +39,7 @@ for (m in panels) {
 dev.off()
 
 ## ---------------- accuracy ----------------
-ac <- read.csv("benchmarks/results/accuracy-raw.csv", stringsAsFactors = FALSE)
+ac <- do.call(rbind, lapply(list.files("benchmarks/results", "^accuracy-raw", full.names = TRUE), read.csv, stringsAsFactors = FALSE))
 dotplot <- function(d, value, xlab, main) {
   agg <- aggregate(d[[value]], list(method = d$method), function(v) c(mean = mean(v), se = if (length(v) > 1) sd(v) / sqrt(length(v)) else 0))
   agg <- data.frame(method = agg$method, mean = agg$x[, "mean"], se = agg$x[, "se"])
@@ -59,10 +59,12 @@ png("benchmarks/figures/accuracy-regression.png", width = 2400, height = 800, re
 par(mfrow = c(1, length(errs)), family = "sans", col.axis = ink2, col.lab = ink2, fg = ink2)
 for (e in errs) dotplot(reg[reg$error == e, ], "l2", "L2 estimation error (mean +/- s.e.)", paste0(e, " errors"))
 dev.off()
-png("benchmarks/figures/accuracy-classification.png", width = 1400, height = 700, res = 160, bg = surface)
-par(mfrow = c(1, 2), family = "sans", col.axis = ink2, col.lab = ink2, fg = ink2)
 cl <- ac[ac$setting == "classification", ]
-dotplot(cl, "test_mae", "test misclassification rate (mean +/- s.e.)", "Classification: test error")
-dotplot(cl, "fpr", "false positive rate (mean +/- s.e.)", "Classification: false positives")
-dev.off()
+if (nrow(cl)) {
+  png("benchmarks/figures/accuracy-classification.png", width = 1400, height = 700, res = 160, bg = surface)
+  par(mfrow = c(1, 2), family = "sans", col.axis = ink2, col.lab = ink2, fg = ink2)
+  dotplot(cl, "test_mae", "test misclassification rate (mean +/- s.e.)", "Classification: test error")
+  dotplot(cl, "fpr", "false positive rate (mean +/- s.e.)", "Classification: false positives")
+  dev.off()
+}
 cat("figures written to benchmarks/figures/\n")

@@ -44,9 +44,11 @@ sim_reg <- function(n, p, s = 10, error = c("normal", "t3", "t2", "contaminated"
   out
 }
 
-## Binary classification with a sparse linear signal; labels flipped with
-## probability `flip` to make the problem non-separable.
-sim_class <- function(n, p, s = 10, rho = 0.5, flip = 0.1, seed = 1, ntest = 0) {
+## Binary classification with a sparse linear signal (two blocks of equal
+## coefficients with opposite signs); Gaussian noise before taking the sign
+## and labels flipped with probability `flip` make the problem
+## non-separable.
+sim_class <- function(n, p, s = 10, rho = 0.5, flip = 0.05, sd_noise = 1, seed = 1, ntest = 0) {
   set.seed(seed)
   gen_x <- function(m) {
     z <- matrix(rnorm(m * p), m, p)
@@ -54,9 +56,9 @@ sim_class <- function(n, p, s = 10, rho = 0.5, flip = 0.1, seed = 1, ntest = 0) 
     z
   }
   beta <- numeric(p)
-  beta[seq_len(s)] <- rep(c(1, -1), length.out = s)
+  beta[seq_len(s)] <- rep(c(1, -1), each = ceiling(s / 2))[seq_len(s)]
   gen_y <- function(x) {
-    y <- sign(drop(x %*% beta) + rnorm(nrow(x), sd = 0.5))
+    y <- sign(drop(x %*% beta) + rnorm(nrow(x), sd = sd_noise))
     y[y == 0] <- 1
     fl <- runif(nrow(x)) < flip
     y[fl] <- -y[fl]

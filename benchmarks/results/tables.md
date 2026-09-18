@@ -121,51 +121,51 @@
 | sparseSVM::sparseSVM (gamma = 0.1, default) | 0.48 (df 6) | 3.3 (df 135) | 10 (df 337) | 33 (df 444) | 1e+02 (df 448) | 0.04 |
 | sparseSVM::sparseSVM (gamma = 0.01, eps = 1e-8) | 0.47 (df 6) | 2.9 (df 137) | 9.5 (df 362) | 32 (df 455) | 98 (df 458) | 1.07 |
 
-**regression, normal** (n = 200, p = 500, s = 10, 1 replications; mean (s.e.); test error = mean absolute error on 1000 test observations).
+**regression, normal** (n = 200, p = 500, s = 10, 10 replications; mean (s.e.); test error = mean absolute error on 1000 test observations).
 
 | method | L2 error | test error | TPR | FPR | df | CV seconds |
 |---|---|---|---|---|---|---|
-| hdstats::hdhuber (delta = 1) | 0.629 (NA) | 0.916 (NA) | 1.000 (NA) | 0.333 (NA) | 40.0 | 0.3 |
-| hqreg (huber, gamma = 1) | 0.631 (NA) | 0.916 (NA) | 1.000 (NA) | 0.333 (NA) | 40.0 | 0.1 |
-| conquer (lasso, tau = 0.5) | 0.651 (NA) | 0.943 (NA) | 1.000 (NA) | 0.400 (NA) | 46.0 | 0.4 |
-| glmnet (least squares lasso) | 0.676 (NA) | 0.909 (NA) | 1.000 (NA) | 0.300 (NA) | 37.0 | 0.1 |
-| hqreg (quantile, tau = 0.5) | 0.693 (NA) | 0.976 (NA) | 1.000 (NA) | 0.667 (NA) | 70.0 | 5.7 |
-| hdstats::hdqr (tau = 0.5) | 0.850 (NA) | 0.992 (NA) | 1.000 (NA) | 0.567 (NA) | 61.0 | 0.9 |
-| hdstats::hdrr (rank) | 0.924 (NA) | 1.017 (NA) | 1.000 (NA) | 0.578 (NA) | 62.0 | 21.7 |
+| glmnet (least squares lasso) | 1.136 (0.048) | 1.056 (0.021) | 1.000 (0.000) | 0.159 (0.012) | 87.8 | 0.1 |
+| hqreg (huber, gamma = 1) | 1.140 (0.052) | 1.065 (0.021) | 1.000 (0.000) | 0.165 (0.015) | 91.0 | 0.3 |
+| hdstats::hdhuber (delta = 1) | 1.147 (0.051) | 1.065 (0.021) | 1.000 (0.000) | 0.160 (0.015) | 88.6 | 0.8 |
+| conquer (lasso, tau = 0.5) | 1.257 (0.070) | 1.099 (0.024) | 1.000 (0.000) | 0.155 (0.012) | 86.1 | 2.0 |
+| hqreg (quantile, tau = 0.5) | 1.277 (0.052) | 1.157 (0.028) | 1.000 (0.000) | 0.286 (0.037) | 150.1 | 26.5 |
+| hdstats::hdqr (tau = 0.5) | 1.558 (0.055) | 1.238 (0.034) | 1.000 (0.000) | 0.207 (0.029) | 111.5 | 4.4 |
+| hdstats::hdrr (rank) | 1.627 (0.077) | 1.222 (0.034) | 1.000 (0.000) | 0.154 (0.030) | 85.3 | 136.3 |
 
-**regression, t3** (n = 200, p = 500, s = 10, 1 replications; mean (s.e.); test error = mean absolute error on 1000 test observations).
-
-| method | L2 error | test error | TPR | FPR | df | CV seconds |
-|---|---|---|---|---|---|---|
-| conquer (lasso, tau = 0.5) | 1.186 (NA) | 1.323 (NA) | 1.000 (NA) | 0.356 (NA) | 42.0 | 0.4 |
-| hdstats::hdhuber (delta = 1) | 1.196 (NA) | 1.312 (NA) | 1.000 (NA) | 0.311 (NA) | 38.0 | 0.5 |
-| hqreg (huber, gamma = 1) | 1.197 (NA) | 1.312 (NA) | 1.000 (NA) | 0.311 (NA) | 38.0 | 0.1 |
-| glmnet (least squares lasso) | 1.394 (NA) | 1.365 (NA) | 1.000 (NA) | 0.378 (NA) | 44.0 | 0.1 |
-| hqreg (quantile, tau = 0.5) | 1.408 (NA) | 1.385 (NA) | 1.000 (NA) | 0.311 (NA) | 38.0 | 7.6 |
-| hdstats::hdrr (rank) | 1.578 (NA) | 1.429 (NA) | 1.000 (NA) | 0.411 (NA) | 47.0 | 23.2 |
-| hdstats::hdqr (tau = 0.5) | 1.835 (NA) | 1.528 (NA) | 1.000 (NA) | 0.367 (NA) | 43.0 | 1.2 |
-
-**regression, contaminated** (n = 200, p = 500, s = 10, 1 replications; mean (s.e.); test error = mean absolute error on 1000 test observations).
+**regression, t3** (n = 200, p = 500, s = 10, 10 replications; mean (s.e.); test error = mean absolute error on 1000 test observations).
 
 | method | L2 error | test error | TPR | FPR | df | CV seconds |
 |---|---|---|---|---|---|---|
-| conquer (lasso, tau = 0.5) | 0.847 (NA) | 1.693 (NA) | 1.000 (NA) | 0.311 (NA) | 38.0 | 0.5 |
-| hdstats::hdhuber (delta = 1) | 0.855 (NA) | 1.679 (NA) | 1.000 (NA) | 0.344 (NA) | 41.0 | 0.7 |
-| hqreg (huber, gamma = 1) | 0.866 (NA) | 1.679 (NA) | 1.000 (NA) | 0.356 (NA) | 42.0 | 0.1 |
-| hqreg (quantile, tau = 0.5) | 0.903 (NA) | 1.719 (NA) | 1.000 (NA) | 0.333 (NA) | 40.0 | 6.4 |
-| hdstats::hdrr (rank) | 1.072 (NA) | 1.721 (NA) | 1.000 (NA) | 0.389 (NA) | 45.0 | 26.9 |
-| hdstats::hdqr (tau = 0.5) | 1.091 (NA) | 1.750 (NA) | 1.000 (NA) | 0.411 (NA) | 47.0 | 1.1 |
-| glmnet (least squares lasso) | 1.772 (NA) | 2.080 (NA) | 0.800 (NA) | 0.333 (NA) | 38.0 | 0.1 |
+| hdstats::hdhuber (delta = 1) | 1.660 (0.119) | 1.472 (0.040) | 0.950 (0.022) | 0.118 (0.010) | 67.4 | 1.4 |
+| hqreg (huber, gamma = 1) | 1.663 (0.118) | 1.472 (0.040) | 0.950 (0.022) | 0.117 (0.009) | 66.9 | 0.4 |
+| hqreg (quantile, tau = 0.5) | 1.727 (0.132) | 1.524 (0.046) | 0.920 (0.039) | 0.179 (0.014) | 97.0 | 34.8 |
+| conquer (lasso, tau = 0.5) | 1.773 (0.148) | 1.515 (0.047) | 0.890 (0.043) | 0.117 (0.013) | 66.0 | 2.2 |
+| glmnet (least squares lasso) | 1.819 (0.127) | 1.522 (0.034) | 0.940 (0.031) | 0.114 (0.012) | 65.1 | 0.1 |
+| hdstats::hdqr (tau = 0.5) | 1.987 (0.112) | 1.603 (0.045) | 0.910 (0.031) | 0.150 (0.013) | 82.7 | 5.0 |
+| hdstats::hdrr (rank) | 2.075 (0.109) | 1.597 (0.037) | 0.910 (0.038) | 0.106 (0.011) | 60.9 | 176.3 |
 
-**classification, flip 10%** (n = 200, p = 500, s = 10, 1 replications; mean (s.e.); test error = misclassification rate on 1000 test observations).
+**regression, contaminated** (n = 200, p = 500, s = 10, 10 replications; mean (s.e.); test error = mean absolute error on 1000 test observations).
+
+| method | L2 error | test error | TPR | FPR | df | CV seconds |
+|---|---|---|---|---|---|---|
+| hqreg (huber, gamma = 1) | 1.799 (0.126) | 1.954 (0.041) | 0.910 (0.046) | 0.098 (0.013) | 57.0 | 0.9 |
+| hdstats::hdhuber (delta = 1) | 1.807 (0.125) | 1.956 (0.041) | 0.920 (0.039) | 0.095 (0.012) | 55.7 | 3.9 |
+| hqreg (quantile, tau = 0.5) | 1.868 (0.151) | 2.004 (0.055) | 0.920 (0.047) | 0.151 (0.020) | 83.0 | 47.5 |
+| conquer (lasso, tau = 0.5) | 1.938 (0.149) | 2.009 (0.056) | 0.880 (0.053) | 0.098 (0.013) | 56.7 | 2.6 |
+| hdstats::hdqr (tau = 0.5) | 2.114 (0.130) | 2.092 (0.046) | 0.880 (0.053) | 0.133 (0.020) | 74.2 | 6.4 |
+| hdstats::hdrr (rank) | 2.416 (0.139) | 2.182 (0.036) | 0.830 (0.052) | 0.091 (0.019) | 52.9 | 269.1 |
+| glmnet (least squares lasso) | 3.175 (0.068) | 2.505 (0.024) | 0.370 (0.052) | 0.038 (0.008) | 22.2 | 0.1 |
+
+**classification, flip 10%** (n = 200, p = 500, s = 10, 10 replications; mean (s.e.); test error = misclassification rate on 1000 test observations).
 
 | method | test error | TPR | FPR | df | CV seconds |
 |---|---|---|---|---|---|
-| glmnet (logistic lasso) | 0.320 (NA) | 1.000 (NA) | 0.278 (NA) | 35.0 | 0.2 |
-| hdstats::hdsvm | 0.325 (NA) | 0.900 (NA) | 0.300 (NA) | 36.0 | 1.6 |
-| hdstats::hdsvm (is_exact = TRUE) | 0.331 (NA) | 1.000 (NA) | 0.378 (NA) | 44.0 | 20.2 |
-| gcdnet (Huberized squared hinge) | 0.347 (NA) | 1.000 (NA) | 0.878 (NA) | 89.0 | 1.0 |
-| sparseSVM | 0.420 (NA) | 1.000 (NA) | 0.944 (NA) | 95.0 | 0.0 |
+| gcdnet (Huberized squared hinge) | 0.420 (0.010) | 0.880 (0.033) | 0.290 (0.007) | 151.1 | 0.6 |
+| hdstats::hdsvm (is_exact = TRUE) | 0.429 (0.012) | 0.560 (0.105) | 0.165 (0.050) | 86.4 | 25.7 |
+| glmnet (logistic lasso) | 0.436 (0.011) | 0.260 (0.070) | 0.018 (0.009) | 11.6 | 0.1 |
+| hdstats::hdsvm | 0.438 (0.016) | 0.440 (0.090) | 0.063 (0.019) | 35.5 | 0.8 |
+| sparseSVM | 0.469 (0.008) | 0.650 (0.113) | 0.369 (0.094) | 187.5 | 0.3 |
 
 **Platform**:  R: R version 4.3.3 (2024-02-29); platform: x86_64-pc-linux-gnu; os: Linux 6.18.44-fc-v33; cpu: Intel(R) Xeon(R) Processor @ 2.80GHz; BLAS: libblas.so.3.12.0; compiler: g++ (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0 
 

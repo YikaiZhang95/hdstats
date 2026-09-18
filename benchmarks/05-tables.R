@@ -39,7 +39,7 @@ for (rg in unique(q$regime)) for (m in unique(q$model)) {
 }
 
 ## ---------------- accuracy ----------------
-a <- read.csv("benchmarks/results/accuracy-raw.csv", stringsAsFactors = FALSE)
+a <- do.call(rbind, lapply(list.files("benchmarks/results", "^accuracy-raw", full.names = TRUE), read.csv, stringsAsFactors = FALSE))
 se <- function(v) sd(v) / sqrt(length(v))
 fmt <- function(m, s) sprintf("%.3f (%.3f)", m, s)
 for (st in unique(a$setting)) for (e in unique(a$error[a$setting == st])) {
