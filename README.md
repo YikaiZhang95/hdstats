@@ -133,7 +133,7 @@ update pass over the n observations. Both loops are written with
 independent accumulators and branch-free clamps, so they run at full
 throughput with the default compiler flags on every platform (no OpenMP,
 no compiler-specific pragmas). On Linux with `gcc`/`gfortran` 13 at `-O2`,
-100-value paths with `hdhuber()` and `hdqr()` are 2.0-2.9 times faster than
+100-value paths with `hdhuber()` and `hdqr()` are 2.0-2.8 times faster than
 with the Fortran originals ([`hdhuber`](https://github.com/YikaiZhang95/hdhuber),
 [`hdqr`](https://github.com/YikaiZhang95/hdqr)) and `hdsvm()` is 1.4-1.6
 times faster than [`hdsvm`](https://github.com/YikaiZhang95/hdsvm)
