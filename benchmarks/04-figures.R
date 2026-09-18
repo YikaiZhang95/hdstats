@@ -61,10 +61,10 @@ for (e in errs) dotplot(reg[reg$error == e, ], "l2", "L2 estimation error (mean 
 dev.off()
 cl <- ac[ac$setting == "classification", ]
 if (nrow(cl)) {
-  png("benchmarks/figures/accuracy-classification.png", width = 1400, height = 700, res = 160, bg = surface)
+  png("benchmarks/figures/accuracy-classification.png", width = 2000, height = 700, res = 160, bg = surface)
   par(mfrow = c(1, 2), family = "sans", col.axis = ink2, col.lab = ink2, fg = ink2)
-  dotplot(cl, "test_mae", "test misclassification rate (mean +/- s.e.)", "Classification: test error")
-  dotplot(cl, "fpr", "false positive rate (mean +/- s.e.)", "Classification: false positives")
+  dotplot(cl, "test_mae", "test misclassification rate (mean +/- s.e.)", "Test error")
+  dotplot(cl, "fpr", "false positive rate (mean +/- s.e.)", "False positive rate")
   dev.off()
 }
 cat("figures written to benchmarks/figures/\n")

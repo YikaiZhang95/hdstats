@@ -136,6 +136,14 @@ original (100-lambda paths, `-O2`). On Linux with `gcc`/`gfortran` 13 at
 `is_exact = TRUE` option of `hdsvm()` and `hdqr()` adds a projection step
 and is correspondingly slower.
 
+## Benchmarks
+
+The [`benchmarks/`](benchmarks/README.md) directory contains reproducible
+comparisons with hqreg, conquer, quantreg, sparseSVM, gcdnet, LiblineaR,
+Rfit and glmnet: path timings, objective values against exact
+linear-programming references, and cross-validated estimation, selection and
+prediction accuracy under normal, heavy-tailed and contaminated errors.
+
 ## Reference
 
 The finite smoothing algorithm is described in

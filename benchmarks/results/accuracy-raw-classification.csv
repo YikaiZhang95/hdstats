@@ -1,0 +1,51 @@
+"setting","error","method","rep","l2","tpr","fpr","df","test_mae","seconds"
+"classification","flip 5%","glmnet (logistic lasso)",1,NA,1,0.0469387755102041,33,0.208,0.165
+"classification","flip 5%","hdstats::hdsvm",1,NA,1,0.036734693877551,28,0.19,0.698
+"classification","flip 5%","hdstats::hdsvm (is_exact = TRUE)",1,NA,1,0.0428571428571429,31,0.212,18.53
+"classification","flip 5%","sparseSVM",1,NA,0.9,0.102040816326531,59,0.245,0.227
+"classification","flip 5%","gcdnet (Huberized squared hinge)",1,NA,1,0.0877551020408163,53,0.227,0.527999999999999
+"classification","flip 5%","glmnet (logistic lasso)",2,NA,0.8,0.0387755102040816,27,0.209,0.117999999999999
+"classification","flip 5%","hdstats::hdsvm",2,NA,0.8,0.0387755102040816,27,0.202,0.608999999999998
+"classification","flip 5%","hdstats::hdsvm (is_exact = TRUE)",2,NA,0.6,0.0102040816326531,11,0.21,16.426
+"classification","flip 5%","sparseSVM",2,NA,0.7,0.0775510204081633,45,0.23,0.189999999999998
+"classification","flip 5%","gcdnet (Huberized squared hinge)",2,NA,0.8,0.0346938775510204,25,0.21,0.481000000000002
+"classification","flip 5%","glmnet (logistic lasso)",3,NA,0.7,0.026530612244898,20,0.202,0.116999999999997
+"classification","flip 5%","hdstats::hdsvm",3,NA,0.7,0.0244897959183673,19,0.212,0.623000000000005
+"classification","flip 5%","hdstats::hdsvm (is_exact = TRUE)",3,NA,0.5,0,5,0.222,20.314
+"classification","flip 5%","sparseSVM",3,NA,0.8,0.0326530612244898,24,0.216,0.249000000000002
+"classification","flip 5%","gcdnet (Huberized squared hinge)",3,NA,0.7,0.246938775510204,128,0.274,0.527999999999999
+"classification","flip 5%","glmnet (logistic lasso)",4,NA,0.8,0.0489795918367347,32,0.171,0.120999999999995
+"classification","flip 5%","hdstats::hdsvm",4,NA,0.9,0.0530612244897959,35,0.17,0.616999999999997
+"classification","flip 5%","hdstats::hdsvm (is_exact = TRUE)",4,NA,0.9,0.0816326530612245,49,0.172,20.167
+"classification","flip 5%","sparseSVM",4,NA,0.9,0.122448979591837,69,0.219,0.230000000000004
+"classification","flip 5%","gcdnet (Huberized squared hinge)",4,NA,1,0.197959183673469,107,0.219,0.516999999999996
+"classification","flip 5%","glmnet (logistic lasso)",5,NA,0.8,0.0448979591836735,30,0.204,0.118000000000009
+"classification","flip 5%","hdstats::hdsvm",5,NA,0.9,0.0408163265306122,29,0.199,0.590999999999994
+"classification","flip 5%","hdstats::hdsvm (is_exact = TRUE)",5,NA,1,0.0795918367346939,49,0.21,18.222
+"classification","flip 5%","sparseSVM",5,NA,0.7,0.0102040816326531,12,0.222,0.184000000000012
+"classification","flip 5%","gcdnet (Huberized squared hinge)",5,NA,1,0.208163265306122,112,0.228,0.497
+"classification","flip 5%","glmnet (logistic lasso)",6,NA,0.8,0.0571428571428571,36,0.17,0.112000000000009
+"classification","flip 5%","hdstats::hdsvm",6,NA,0.8,0.0448979591836735,30,0.169,0.588999999999999
+"classification","flip 5%","hdstats::hdsvm (is_exact = TRUE)",6,NA,0.8,0.26530612244898,138,0.228,20.155
+"classification","flip 5%","sparseSVM",6,NA,0.9,0.0224489795918367,20,0.208,0.215000000000003
+"classification","flip 5%","gcdnet (Huberized squared hinge)",6,NA,0.8,0.210204081632653,111,0.229,0.51100000000001
+"classification","flip 5%","glmnet (logistic lasso)",7,NA,0.8,0.0204081632653061,18,0.197,0.123999999999995
+"classification","flip 5%","hdstats::hdsvm",7,NA,0.8,0.0183673469387755,17,0.173,0.61099999999999
+"classification","flip 5%","hdstats::hdsvm (is_exact = TRUE)",7,NA,0.8,0.0346938775510204,25,0.2,18.027
+"classification","flip 5%","sparseSVM",7,NA,0.9,0.0102040816326531,14,0.191,0.217000000000013
+"classification","flip 5%","gcdnet (Huberized squared hinge)",7,NA,0.8,0.257142857142857,134,0.312,0.51600000000002
+"classification","flip 5%","glmnet (logistic lasso)",8,NA,0.9,0.0959183673469388,56,0.211,0.111999999999995
+"classification","flip 5%","hdstats::hdsvm",8,NA,0.8,0.0591836734693878,37,0.209,0.569999999999993
+"classification","flip 5%","hdstats::hdsvm (is_exact = TRUE)",8,NA,0.9,0.212244897959184,113,0.254,17.006
+"classification","flip 5%","sparseSVM",8,NA,0.9,0.0653061224489796,41,0.243,0.217999999999989
+"classification","flip 5%","gcdnet (Huberized squared hinge)",8,NA,0.9,0.220408163265306,117,0.263,0.488
+"classification","flip 5%","glmnet (logistic lasso)",9,NA,0.9,0.0510204081632653,34,0.21,0.10499999999999
+"classification","flip 5%","hdstats::hdsvm",9,NA,0.6,0,6,0.231,0.534999999999997
+"classification","flip 5%","hdstats::hdsvm (is_exact = TRUE)",9,NA,0.6,0,6,0.254,19.337
+"classification","flip 5%","sparseSVM",9,NA,0.8,0.0102040816326531,13,0.198,0.169000000000011
+"classification","flip 5%","gcdnet (Huberized squared hinge)",9,NA,0.7,0.0142857142857143,14,0.228,0.495999999999981
+"classification","flip 5%","glmnet (logistic lasso)",10,NA,0.8,0.0163265306122449,16,0.188,0.123999999999995
+"classification","flip 5%","hdstats::hdsvm",10,NA,0.8,0.00612244897959184,11,0.174,0.587000000000018
+"classification","flip 5%","hdstats::hdsvm (is_exact = TRUE)",10,NA,0.8,0.0102040816326531,13,0.196,18.447
+"classification","flip 5%","sparseSVM",10,NA,0.8,0.036734693877551,26,0.238,0.209000000000003
+"classification","flip 5%","gcdnet (Huberized squared hinge)",10,NA,0.9,0.142857142857143,79,0.226,0.463000000000022

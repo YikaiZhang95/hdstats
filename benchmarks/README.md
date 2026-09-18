@@ -165,4 +165,139 @@ What the objective gaps show:
 
 ### 3. Statistical performance
 
-ACCURACY_PLACEHOLDER
+Each package selects its own `lambda` by 5-fold cross-validation on the
+same folds (`lambda.min`); the CV time includes the full-data fit.
+Regression: n = 200, p = 500, 10 nonzero coefficients, AR(1) design with
+correlation 0.5, 10 replications, errors N(0,1), t3, or 90% N(0,1) + 10%
+N(0,100); test error is the mean absolute error on 1000 new observations.
+Classification: the same design with two blocks of five coefficients of
+opposite sign, Gaussian noise before taking the sign, and 5% of the labels
+flipped; test error is the misclassification rate on 1000 new observations.
+`hdqr()` and `hdrr()` default to an elastic-net ridge term `lam2 = 0.01`; the
+`lam2 = 0` rows use the lasso penalty like the competitors.
+
+![regression](figures/accuracy-regression.png)
+
+![classification](figures/accuracy-classification.png)
+
+**classification, flip 5%** (n = 200, p = 500, s = 10, 10 replications; mean (s.e.); test error = misclassification rate on 1000 test observations).
+
+| method | test error | TPR | FPR | df | CV seconds |
+|---|---|---|---|---|---|
+| hdstats::hdsvm | 0.193 (0.007) | 0.810 (0.035) | 0.032 (0.006) | 23.9 | 0.6 |
+| glmnet (logistic lasso) | 0.197 (0.005) | 0.830 (0.026) | 0.045 (0.007) | 30.2 | 0.1 |
+| hdstats::hdsvm (is_exact = TRUE) | 0.216 (0.008) | 0.790 (0.055) | 0.074 (0.029) | 44.0 | 18.7 |
+| sparseSVM | 0.221 (0.006) | 0.830 (0.026) | 0.049 (0.013) | 32.3 | 0.2 |
+| gcdnet (Huberized squared hinge) | 0.242 (0.010) | 0.860 (0.037) | 0.162 (0.028) | 88.0 | 0.5 |
+
+**regression, normal** (n = 200, p = 500, s = 10, 10 replications; mean (s.e.); test error = mean absolute error on 1000 test observations).
+
+| method | L2 error | test error | TPR | FPR | df | CV seconds |
+|---|---|---|---|---|---|---|
+| glmnet (least squares lasso) | 1.136 (0.048) | 1.056 (0.021) | 1.000 (0.000) | 0.159 (0.012) | 87.8 | 0.1 |
+| hqreg (huber, gamma = 1) | 1.140 (0.052) | 1.065 (0.021) | 1.000 (0.000) | 0.165 (0.015) | 91.0 | 0.3 |
+| hdstats::hdhuber (delta = 1) | 1.147 (0.051) | 1.065 (0.021) | 1.000 (0.000) | 0.160 (0.015) | 88.6 | 0.8 |
+| conquer (lasso, tau = 0.5) | 1.257 (0.070) | 1.099 (0.024) | 1.000 (0.000) | 0.155 (0.012) | 86.1 | 2.0 |
+| hdstats::hdqr (tau = 0.5, lam2 = 0) | 1.270 (0.043) | 1.147 (0.030) | 1.000 (0.000) | 0.214 (0.028) | 115.0 | 2.6 |
+| hqreg (quantile, tau = 0.5) | 1.277 (0.052) | 1.157 (0.028) | 1.000 (0.000) | 0.286 (0.037) | 150.1 | 26.5 |
+| hdstats::hdqr (tau = 0.5) | 1.558 (0.055) | 1.238 (0.034) | 1.000 (0.000) | 0.207 (0.029) | 111.5 | 4.4 |
+| hdstats::hdrr (rank) | 1.627 (0.077) | 1.222 (0.034) | 1.000 (0.000) | 0.154 (0.030) | 85.3 | 136.3 |
+
+**regression, t3** (n = 200, p = 500, s = 10, 10 replications; mean (s.e.); test error = mean absolute error on 1000 test observations).
+
+| method | L2 error | test error | TPR | FPR | df | CV seconds |
+|---|---|---|---|---|---|---|
+| hdstats::hdhuber (delta = 1) | 1.660 (0.119) | 1.472 (0.040) | 0.950 (0.022) | 0.118 (0.010) | 67.4 | 1.4 |
+| hqreg (huber, gamma = 1) | 1.663 (0.118) | 1.472 (0.040) | 0.950 (0.022) | 0.117 (0.009) | 66.9 | 0.4 |
+| hqreg (quantile, tau = 0.5) | 1.727 (0.132) | 1.524 (0.046) | 0.920 (0.039) | 0.179 (0.014) | 97.0 | 34.8 |
+| hdstats::hdqr (tau = 0.5, lam2 = 0) | 1.730 (0.140) | 1.515 (0.046) | 0.910 (0.038) | 0.139 (0.011) | 77.4 | 4.2 |
+| conquer (lasso, tau = 0.5) | 1.773 (0.148) | 1.515 (0.047) | 0.890 (0.043) | 0.117 (0.013) | 66.0 | 2.2 |
+| glmnet (least squares lasso) | 1.819 (0.127) | 1.522 (0.034) | 0.940 (0.031) | 0.114 (0.012) | 65.1 | 0.1 |
+| hdstats::hdqr (tau = 0.5) | 1.987 (0.112) | 1.603 (0.045) | 0.910 (0.031) | 0.150 (0.013) | 82.7 | 5.0 |
+| hdstats::hdrr (rank) | 2.075 (0.109) | 1.597 (0.037) | 0.910 (0.038) | 0.106 (0.011) | 60.9 | 176.3 |
+
+**regression, contaminated** (n = 200, p = 500, s = 10, 10 replications; mean (s.e.); test error = mean absolute error on 1000 test observations).
+
+| method | L2 error | test error | TPR | FPR | df | CV seconds |
+|---|---|---|---|---|---|---|
+| hdstats::hdqr (tau = 0.5, lam2 = 0) | 1.799 (0.123) | 1.973 (0.046) | 0.910 (0.035) | 0.122 (0.012) | 69.0 | 9.3 |
+| hqreg (huber, gamma = 1) | 1.799 (0.126) | 1.954 (0.041) | 0.910 (0.046) | 0.098 (0.013) | 57.0 | 0.9 |
+| hdstats::hdhuber (delta = 1) | 1.807 (0.125) | 1.956 (0.041) | 0.920 (0.039) | 0.095 (0.012) | 55.7 | 3.9 |
+| hqreg (quantile, tau = 0.5) | 1.868 (0.151) | 2.004 (0.055) | 0.920 (0.047) | 0.151 (0.020) | 83.0 | 47.5 |
+| conquer (lasso, tau = 0.5) | 1.938 (0.149) | 2.009 (0.056) | 0.880 (0.053) | 0.098 (0.013) | 56.7 | 2.6 |
+| hdstats::hdqr (tau = 0.5) | 2.114 (0.130) | 2.092 (0.046) | 0.880 (0.053) | 0.133 (0.020) | 74.2 | 6.4 |
+| hdstats::hdrr (rank) | 2.416 (0.139) | 2.182 (0.036) | 0.830 (0.052) | 0.091 (0.019) | 52.9 | 269.1 |
+| glmnet (least squares lasso) | 3.175 (0.068) | 2.505 (0.024) | 0.370 (0.052) | 0.038 (0.008) | 22.2 | 0.1 |
+
+
+What the statistical comparison shows:
+
+- **Huber regression.** `hdhuber()` and hqreg's Huber solver give the same
+  estimator and the same numbers: on par with the least-squares lasso under
+  normal errors and clearly better under t3 errors (L2 error 1.66 versus
+  1.82) and under contamination (1.81 versus 3.18, where the least-squares
+  lasso recovers only 37% of the true variables).
+- **Quantile regression.** With `lam2 = 0`, `hdqr()` matches hqreg's
+  quantile solver under normal and t3 errors and is slightly better under
+  contamination (1.80 versus 1.87), at 5 to 18 times lower CV time; it is
+  on par with conquer. With the default `lam2 = 0.01` its estimation error
+  is 15 to 25% higher, because the ridge term shrinks the large true
+  coefficients and moves the CV choice to a larger `lambda`. The same
+  default applies to `hdrr()`, whose results here were obtained with it
+  (`HDSTATS_BENCH_PART=extra2` reruns the rank regression with `lam2 = 0`;
+  it takes about two hours and was not completed for this write-up).
+- **Rank regression.** `hdrr()` is robust (it degrades far less than the
+  least-squares lasso under contamination) but is the least accurate of the
+  robust methods here and by far the most expensive, since its design has
+  n(n - 1)/2 rows.
+- **SVM.** At the CV-selected `lambda`, `hdsvm()` has the lowest test error
+  (0.193) and the lowest false-positive rate (0.032, 24 selected variables),
+  ahead of the logistic lasso (0.197), sparseSVM (0.221) and gcdnet (0.242);
+  `is_exact = TRUE` is worse (0.216) and 30 times slower. So the large
+  optimization gaps of section 2 do not translate into worse predictions
+  in this setting, which is consistent with the h = 1 smoothed hinge being
+  a sensible loss in its own right.
+
+### 4. Platform
+
+**Platform**:  R: R version 4.3.3 (2024-02-29); platform: x86_64-pc-linux-gnu; os: Linux 6.18.44-fc-v33; cpu: Intel(R) Xeon(R) Processor @ 2.80GHz; BLAS: libblas.so.3.12.0; compiler: g++ (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0 
+
+**Package versions**
+
+| package | version |
+|---|---|
+| hdstats | 0.2.0 |
+| hqreg | 1.4.1 |
+| sparseSVM | 1.1.7 |
+| conquer | 1.3.3 |
+| quantreg | 5.97 |
+| gcdnet | 1.0.6 |
+| LiblineaR | 2.10.25 |
+| Rfit | 0.27.0 |
+| glmnet | 4.1.8 |
+
+
+## Implications for the JSS manuscript
+
+1. **Lead with quantile regression and robustness, not raw speed.**
+   `hdqr()` is 4 to 9 times faster than hqreg's quantile solver and as fast
+   as conquer while reaching a closer-to-exact objective than either; the
+   Huber and SVM solvers are competitive but not the fastest available
+   (hqreg is 2.5 to 4 times faster for Huber, sparseSVM 1.3 to 8 times
+   faster for the SVM).
+2. **Reconsider the default `lam2 = 0.01` of `hdqr()` and `hdrr()`** (a
+   default inherited from the original packages): it costs 15 to 25% in
+   estimation error in these sparse settings and is inconsistent with
+   `hdhuber()` and `hdsvm()`, whose default is `lam2 = 0`.
+3. **Do not describe the L1-penalized SVM solutions as exact.** Both modes
+   return smoothed-problem solutions whose hinge objective can be several
+   times the LP optimum; the `is_exact` projection step does not fix this
+   and coordinate descent stalls for small bandwidths. If exactness is a
+   claim of the paper, the algorithm needs a different termination
+   criterion or a final LP/active-set polish. sparseSVM has the same
+   problem, so a comparison on objective values against an LP reference is
+   a fair and interesting table for the paper.
+4. **Report optimization accuracy alongside speed** (the LP-reference
+   protocol used here, with the `lambda_rq = 2 n lambda` conversion for
+   quantreg's lasso) so that reviewers cannot attribute the speed to loose
+   convergence.
