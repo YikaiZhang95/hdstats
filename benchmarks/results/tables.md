@@ -2,36 +2,36 @@
 
 | method (seconds; ratio to hdstats default) | 200 x 1000 | 500 x 2000 | 1000 x 5000 | 2000 x 2000 |
 |---|---|---|---|---|
-| hdhuber() | 0.25 s (1.0x) | 2.29 s (1.0x) | 6.64 s (1.0x) | 84.94 s (1.0x) |
-| hqreg(method = 'huber') | 0.11 s (0.4x) | 0.87 s (0.4x) | 2.37 s (0.4x) | 22.18 s (0.3x) |
+| hdhuber() | 0.09 s (1.0x) | 0.80 s (1.0x) | 2.43 s (1.0x) | 34.31 s (1.0x) |
+| hqreg(method = 'huber') | 0.11 s (1.3x) | 0.90 s (1.1x) | 2.54 s (1.0x) | 22.44 s (0.7x) |
 
 **Quantile**: median elapsed seconds of 3 runs; the ratio is time / time of hdstats' default solver at that size.
 
 | method (seconds; ratio to hdstats default) | 200 x 1000 | 500 x 2000 | 1000 x 5000 | 2000 x 2000 |
 |---|---|---|---|---|
-| hdqr() | 1.32 s (1.0x) | 6.41 s (1.0x) | 21.84 s (1.0x) | 27.07 s (1.0x) |
-| hdqr(is_exact = TRUE) | 3.03 s (2.3x) | 13.19 s (2.1x) |  |  |
-| hqreg(method = 'quantile') | 9.30 s (7.1x) | 26.79 s (4.2x) | 78.69 s (3.6x) | 249.01 s (9.2x) |
-| conquer.reg() on hdqr's lambda sequence | 1.86 s (1.4x) | 7.30 s (1.1x) | 56.50 s (2.6x) | 24.65 s (0.9x) |
-| rq(method = 'lasso'), 10 lambda values | 37.95 s (28.8x) |  |  |  |
+| hdqr() | 0.60 s (1.0x) | 3.11 s (1.0x) | 10.65 s (1.0x) | 15.87 s (1.0x) |
+| hdqr(is_exact = TRUE) | 1.23 s (2.1x) | 5.44 s (1.7x) |  |  |
+| hqreg(method = 'quantile') | 9.28 s (15.6x) | 26.99 s (8.7x) | 80.72 s (7.6x) | 259.00 s (16.3x) |
+| conquer.reg() on hdqr's lambda sequence | 1.85 s (3.1x) | 7.16 s (2.3x) | 57.94 s (5.4x) | 27.50 s (1.7x) |
+| rq(method = 'lasso'), 10 lambda values | 38.00 s (63.8x) |  |  |  |
 
 **SVM**: median elapsed seconds of 3 runs; the ratio is time / time of hdstats' default solver at that size.
 
 | method (seconds; ratio to hdstats default) | 200 x 1000 | 500 x 2000 | 1000 x 5000 | 2000 x 2000 |
 |---|---|---|---|---|
-| hdsvm() | 0.18 s (1.0x) | 0.93 s (1.0x) | 3.65 s (1.0x) | 13.70 s (1.0x) |
-| hdsvm(is_exact = TRUE) | 6.92 s (37.4x) | 34.30 s (36.9x) |  |  |
-| sparseSVM() | 0.10 s (0.5x) | 0.44 s (0.5x) | 2.82 s (0.8x) | 1.60 s (0.1x) |
-| gcdnet(method = 'hhsvm'), Huberized squared hinge | 0.19 s (1.0x) | 0.74 s (0.8x) | 3.32 s (0.9x) | 9.15 s (0.7x) |
-| LiblineaR(type = 5), one cost value | 0.06 s (0.3x) | 0.21 s (0.2x) | 0.92 s (0.3x) | 1.10 s (0.1x) |
+| hdsvm() | 0.10 s (1.0x) | 0.41 s (1.0x) | 1.78 s (1.0x) | 6.75 s (1.0x) |
+| hdsvm(is_exact = TRUE) | 2.69 s (27.1x) | 10.36 s (25.0x) |  |  |
+| sparseSVM() | 0.09 s (0.9x) | 0.37 s (0.9x) | 2.11 s (1.2x) | 2.13 s (0.3x) |
+| gcdnet(method = 'hhsvm'), Huberized squared hinge | 0.15 s (1.5x) | 0.69 s (1.7x) | 3.02 s (1.7x) | 5.79 s (0.9x) |
+| LiblineaR(type = 5), one cost value | 0.06 s (0.6x) | 0.17 s (0.4x) | 0.79 s (0.4x) | 0.90 s (0.1x) |
 
 **Rank**: median elapsed seconds of 3 runs; the ratio is time / time of hdstats' default solver at that size.
 
 | method (seconds; ratio to hdstats default) | 100 x 10 | 200 x 20 | 400 x 20 |
 |---|---|---|---|
-| hdrr(), 100-value path | 0.45 s (1.0x) | 2.04 s (1.0x) | 9.02 s (1.0x) |
-| rfit(), one unpenalized fit | 0.02 s (0.0x) | 0.03 s (0.0x) | 0.03 s (0.0x) |
-| rq() on all pairwise differences, one fit | 0.04 s (0.1x) | 0.60 s (0.3x) | 9.97 s (1.1x) |
+| hdrr(), 100-value path | 0.26 s (1.0x) | 1.17 s (1.0x) | 5.01 s (1.0x) |
+| rfit(), one unpenalized fit | 0.02 s (0.1x) | 0.03 s (0.0x) | 0.03 s (0.0x) |
+| rq() on all pairwise differences, one fit | 0.04 s (0.2x) | 0.63 s (0.5x) | 10.06 s (2.0x) |
 
 **Huber, n = 400, p = 200**: relative objective gap (objective - best) / best at five lambda values; df = number of nonzero coefficients; seconds = time for the five fits.
 

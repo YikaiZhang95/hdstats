@@ -44,57 +44,68 @@ starts and is run on 10 `lambda` values only, for the smallest size.
 
 | method (seconds; ratio to hdstats default) | 200 x 1000 | 500 x 2000 | 1000 x 5000 | 2000 x 2000 |
 |---|---|---|---|---|
-| hdhuber() | 0.25 s (1.0x) | 2.29 s (1.0x) | 6.64 s (1.0x) | 84.94 s (1.0x) |
-| hqreg(method = 'huber') | 0.11 s (0.4x) | 0.87 s (0.4x) | 2.37 s (0.4x) | 22.18 s (0.3x) |
+| hdhuber() | 0.09 s (1.0x) | 0.80 s (1.0x) | 2.43 s (1.0x) | 34.31 s (1.0x) |
+| hqreg(method = 'huber') | 0.11 s (1.3x) | 0.90 s (1.1x) | 2.54 s (1.0x) | 22.44 s (0.7x) |
 
 **Quantile**: median elapsed seconds of 3 runs; the ratio is time / time of hdstats' default solver at that size.
 
 | method (seconds; ratio to hdstats default) | 200 x 1000 | 500 x 2000 | 1000 x 5000 | 2000 x 2000 |
 |---|---|---|---|---|
-| hdqr() | 1.32 s (1.0x) | 6.41 s (1.0x) | 21.84 s (1.0x) | 27.07 s (1.0x) |
-| hdqr(is_exact = TRUE) | 3.03 s (2.3x) | 13.19 s (2.1x) |  |  |
-| hqreg(method = 'quantile') | 9.30 s (7.1x) | 26.79 s (4.2x) | 78.69 s (3.6x) | 249.01 s (9.2x) |
-| conquer.reg() on hdqr's lambda sequence | 1.86 s (1.4x) | 7.30 s (1.1x) | 56.50 s (2.6x) | 24.65 s (0.9x) |
-| rq(method = 'lasso'), 10 lambda values | 37.95 s (28.8x) |  |  |  |
+| hdqr() | 0.60 s (1.0x) | 3.11 s (1.0x) | 10.65 s (1.0x) | 15.87 s (1.0x) |
+| hdqr(is_exact = TRUE) | 1.23 s (2.1x) | 5.44 s (1.7x) |  |  |
+| hqreg(method = 'quantile') | 9.28 s (15.6x) | 26.99 s (8.7x) | 80.72 s (7.6x) | 259.00 s (16.3x) |
+| conquer.reg() on hdqr's lambda sequence | 1.85 s (3.1x) | 7.16 s (2.3x) | 57.94 s (5.4x) | 27.50 s (1.7x) |
+| rq(method = 'lasso'), 10 lambda values | 38.00 s (63.8x) |  |  |  |
 
 **SVM**: median elapsed seconds of 3 runs; the ratio is time / time of hdstats' default solver at that size.
 
 | method (seconds; ratio to hdstats default) | 200 x 1000 | 500 x 2000 | 1000 x 5000 | 2000 x 2000 |
 |---|---|---|---|---|
-| hdsvm() | 0.18 s (1.0x) | 0.93 s (1.0x) | 3.65 s (1.0x) | 13.70 s (1.0x) |
-| hdsvm(is_exact = TRUE) | 6.92 s (37.4x) | 34.30 s (36.9x) |  |  |
-| sparseSVM() | 0.10 s (0.5x) | 0.44 s (0.5x) | 2.82 s (0.8x) | 1.60 s (0.1x) |
-| gcdnet(method = 'hhsvm'), Huberized squared hinge | 0.19 s (1.0x) | 0.74 s (0.8x) | 3.32 s (0.9x) | 9.15 s (0.7x) |
-| LiblineaR(type = 5), one cost value | 0.06 s (0.3x) | 0.21 s (0.2x) | 0.92 s (0.3x) | 1.10 s (0.1x) |
+| hdsvm() | 0.10 s (1.0x) | 0.41 s (1.0x) | 1.78 s (1.0x) | 6.75 s (1.0x) |
+| hdsvm(is_exact = TRUE) | 2.69 s (27.1x) | 10.36 s (25.0x) |  |  |
+| sparseSVM() | 0.09 s (0.9x) | 0.37 s (0.9x) | 2.11 s (1.2x) | 2.13 s (0.3x) |
+| gcdnet(method = 'hhsvm'), Huberized squared hinge | 0.15 s (1.5x) | 0.69 s (1.7x) | 3.02 s (1.7x) | 5.79 s (0.9x) |
+| LiblineaR(type = 5), one cost value | 0.06 s (0.6x) | 0.17 s (0.4x) | 0.79 s (0.4x) | 0.90 s (0.1x) |
 
 **Rank**: median elapsed seconds of 3 runs; the ratio is time / time of hdstats' default solver at that size.
 
 | method (seconds; ratio to hdstats default) | 100 x 10 | 200 x 20 | 400 x 20 |
 |---|---|---|---|
-| hdrr(), 100-value path | 0.45 s (1.0x) | 2.04 s (1.0x) | 9.02 s (1.0x) |
-| rfit(), one unpenalized fit | 0.02 s (0.0x) | 0.03 s (0.0x) | 0.03 s (0.0x) |
-| rq() on all pairwise differences, one fit | 0.04 s (0.1x) | 0.60 s (0.3x) | 9.97 s (1.1x) |
+| hdrr(), 100-value path | 0.26 s (1.0x) | 1.17 s (1.0x) | 5.01 s (1.0x) |
+| rfit(), one unpenalized fit | 0.02 s (0.1x) | 0.03 s (0.0x) | 0.03 s (0.0x) |
+| rq() on all pairwise differences, one fit | 0.04 s (0.2x) | 0.63 s (0.5x) | 10.06 s (2.0x) |
 
 
 What the timings show:
 
-- **Huber regression.** hqreg's semismooth Newton coordinate descent is
-  2.5 to 3.8 times faster than `hdhuber()` at every size.
-- **Quantile regression.** `hdqr()` is 3.6 to 9.2 times faster than hqreg's
-  quantile solver and comparable to conquer (0.9 to 2.6 times conquer's
-  time), while reaching a better objective than either (next section).
-  The exact LP solver in quantreg needs 38 s for 10 `lambda` values at the
-  smallest size, against 1.3 s for the 100-value `hdqr()` path.
-  `is_exact = TRUE` roughly doubles the run time.
-- **SVM.** sparseSVM is 1.3 to 8.6 times faster than `hdsvm()` (its
-  advantage grows with n), gcdnet's Huberized squared hinge is on par, and
-  a single LiblineaR fit costs 10 to 30% of a whole `hdsvm()` path.
-  `hdsvm(is_exact = TRUE)` is about 37 times slower than the default.
+- **Huber regression.** `hdhuber()` is 1.05 to 1.3 times faster than
+  hqreg's semismooth Newton coordinate descent when p > n and 1.5 times
+  slower at n = p = 2000, where the path ends in the nearly unpenalized,
+  ill-conditioned regime (lambda.min = 1e-4 lambda.max) in which the
+  majorization steps of the finite smoothing algorithm are most damped.
+- **Quantile regression.** `hdqr()` is 7.6 to 16 times faster than hqreg's
+  quantile solver and 1.7 to 5.4 times faster than conquer, while reaching
+  a better objective than either (next section). The exact LP solver in
+  quantreg needs 38 s for 10 `lambda` values at the smallest size, against
+  0.6 s for the 100-value `hdqr()` path. `is_exact = TRUE` roughly doubles
+  the run time.
+- **SVM.** sparseSVM and `hdsvm()` are on par when p > n (0.9 to 1.2 times
+  `hdsvm()`'s time); sparseSVM is 3 times faster at n = p = 2000, where its
+  advantage grows with n. gcdnet's Huberized squared hinge takes 1.5 to
+  1.7 times as long for p > n, and a single LiblineaR fit costs 13 to 60%
+  of a whole `hdsvm()` path. `hdsvm(is_exact = TRUE)` is about 25 times
+  slower than the default.
 - **Rank regression.** No mainstream package fits penalized rank
-  regression. A 100-value `hdrr()` path costs 0.5 to 9 s for n = 100 to
+  regression. A 100-value `hdrr()` path costs 0.3 to 5 s for n = 100 to
   400, against 0.02 to 0.03 s for one unpenalized `Rfit::rfit()` fit; the
-  exact LP on all pairwise differences (quantreg) takes as long as the whole
-  `hdrr()` path at n = 400.
+  exact LP on all pairwise differences (quantreg) takes twice as long as
+  the whole `hdrr()` path at n = 400.
+
+These timings are for the current C++ kernels, which keep the derivative
+of the smoothed loss for every observation and use unrolled, branch-free
+inner loops; they are 1.4 to 2.8 times faster than the first C++ version
+and 2 to 2.8 (Huber, quantile) or 1.4 to 1.6 (SVM) times faster than the
+Fortran originals on the same machine.
 
 **A Newton-type coordinate step was evaluated and not adopted.** The
 majorization step of the finite smoothing algorithm uses the curvature
@@ -296,12 +307,13 @@ What the statistical comparison shows:
 
 ## Implications for the JSS manuscript
 
-1. **Lead with quantile regression and robustness, not raw speed.**
-   `hdqr()` is 4 to 9 times faster than hqreg's quantile solver and as fast
-   as conquer while reaching a closer-to-exact objective than either; the
-   Huber and SVM solvers are competitive but not the fastest available
-   (hqreg is 2.5 to 4 times faster for Huber, sparseSVM 1.3 to 8 times
-   faster for the SVM).
+1. **Lead with quantile regression and robustness; the speed story is
+   now solid.** `hdqr()` is 8 to 16 times faster than hqreg's quantile
+   solver and 2 to 5 times faster than conquer while reaching a
+   closer-to-exact objective than either; `hdhuber()` matches or beats
+   hqreg for p > n, and `hdsvm()` matches sparseSVM for p > n. The one
+   regime where the majorization steps lag (n = p, nearly unpenalized end
+   of the path) is worth stating rather than hiding.
 2. **Reconsider the default `lam2 = 0.01` of `hdqr()` and `hdrr()`** (a
    default inherited from the original packages): it costs 15 to 25% in
    estimation error in these sparse settings and is inconsistent with
