@@ -27,6 +27,8 @@
 #'   \item{lambda.min}{\code{lambda} achieving the minimum CV error.}
 #'   \item{lambda.1se}{Largest \code{lambda} within one standard error of the minimum.}
 #'   \item{nzero}{Number of non-zero coefficients at each \code{lambda}.}
+#'   \item{name}{a text string describing the error measure (for plotting).}
+#'   \item{call}{the call that produced this object.}
 #'   \item{hdqr.fit}{The full-data \code{\link{hdrr}} fit (an object of class
 #'     \code{c("hdrr", "hdqr")}).}
 #'
@@ -54,7 +56,7 @@ cv.hdrr <- function(x, y, lambda = NULL, nfolds = 5L, foldid, ...) {
   if (missing(foldid))
     foldid <- sample(rep(seq(nfolds), length = x.row)) else nfolds <- max(foldid)
   if (nfolds < 3)
-    stop("nfolds must be bigger than 3; nfolds=5 recommended.")
+    stop("nfolds must be at least 3; nfolds = 5 recommended.")
 
   outlist <- as.list(seq(nfolds))
   for (i in seq(nfolds)) {
@@ -71,7 +73,8 @@ cv.hdrr <- function(x, y, lambda = NULL, nfolds = 5L, foldid, ...) {
   out <- list(lambda = lambda, cvm = cvm, cvsd = cvsd,
               cvupper = cvm + cvsd, cvlower = cvm - cvsd,
               nzero = nz, name = "Wilcoxon rank (MAE)",
-              hdqr.fit = hdrr.object)
+              hdqr.fit = hdrr.object,
+              call = match.call())
   obj <- c(out, as.list(getmin(lambda, cvm, cvsd)))
   class(obj) <- c("cv.hdrr", "cv.hdqr")
   obj

@@ -2,28 +2,31 @@
 % Please edit documentation in R/cvqr-methods.R
 \name{coef.cv.hdqr}
 \alias{coef.cv.hdqr}
-\title{Extract Coefficients from a `cv.hdqr` Object}
+\title{Extract Coefficients from a \code{cv.hdqr} Object}
 \usage{
 \method{coef}{cv.hdqr}(object, s = c("lambda.1se", "lambda.min"), ...)
 }
 \arguments{
-\item{object}{A fitted `cv.hdqr()` object from which coefficients are to be extracted.}
+\item{object}{A fitted \code{\link{cv.hdqr}} or \code{\link{cv.hdrr}}
+object.}
 
-\item{s}{Specifies the value(s) of the penalty parameter `lambda` for which coefficients are desired.
-The default is `s = "lambda.1se"`, which corresponds to the largest value of `lambda` such that the
-cross-validation error estimate is within one standard error of the minimum. Alternatively,
-`s = "lambda.min"` can be used, corresponding to the minimum of the cross-validation error estimate.
-If `s` is numeric, these are taken as the actual values of `lambda` to use.}
+\item{s}{Value(s) of the penalty parameter \code{lambda} at which
+coefficients are desired. The default is \code{s = "lambda.1se"}, the
+largest value of \code{lambda} such that the cross-validation error is
+within one standard error of the minimum. Alternatively,
+\code{s = "lambda.min"} gives the value minimizing the cross-validation
+error. If \code{s} is numeric, these are taken as the actual values of
+\code{lambda} to use.}
 
 \item{...}{Not used.}
 }
 \value{
-Returns the coefficients at the specified `lambda` values.
+A matrix of coefficients at the specified \code{lambda} values.
 }
 \description{
-Retrieves coefficients from a cross-validated `hdqr()` model, using the
-stored `"hdqr.fit"` object and the optimal `lambda` value determined during
-cross-validation.
+Retrieves coefficients from a cross-validated \code{\link{hdqr}} (or
+\code{\link{hdrr}}) model, using the stored full-data fit and the value
+of \code{lambda} selected by cross-validation.
 }
 \examples{
 set.seed(315)
@@ -33,9 +36,7 @@ x <- matrix(data = rnorm(n * p, mean = 0, sd = 1), nrow = n, ncol = p)
 beta_star <- c(c(2, 1.5, 0.8, 1, 1.75, 0.75, 0.3), rep(0, (p - 7)))
 eps <- rnorm(n, mean = 0, sd = 1)
 y <- x \%*\% beta_star + eps
-tau <- 0.5
-lam2 <- 0.01
-cv.fit <- cv.hdqr(x = x, y = y, tau = tau, lam2 = lam2)
+cv.fit <- cv.hdqr(x = x, y = y, tau = 0.5, lam2 = 0.01)
 coef(cv.fit, s = c(0.02, 0.03))
 }
 \seealso{

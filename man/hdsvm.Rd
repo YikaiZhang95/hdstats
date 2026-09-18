@@ -2,7 +2,7 @@
 % Please edit documentation in R/hdsvm.R
 \name{hdsvm}
 \alias{hdsvm}
-\title{Solve Penalized SVM}
+\title{Fit Penalized Support Vector Machines}
 \usage{
 hdsvm(
   x,
@@ -25,24 +25,28 @@ hdsvm(
 )
 }
 \arguments{
-\item{x}{Matrix of predictors, with dimensions (\eqn{n} observations by \eqn{p} variables).}
+\item{x}{Matrix of predictors, of dimension \eqn{n \times p}{n x p};
+each row is an observation.}
 
-\item{y}{Response variable vector of length \eqn{n}.}
+\item{y}{Binary response of length \eqn{n}: either a factor with two
+levels or a vector with exactly two distinct values (e.g. \code{-1}/\code{1}
+or \code{0}/\code{1}). Internally the first level is coded as \eqn{-1}
+and the second as \eqn{+1}; class predictions are returned in this
+coding.}
 
-\item{nlambda}{Number of \code{lambda} values to consider (default is 100).}
+\item{nlambda}{The number of \code{lambda} values (default is 100).}
 
 \item{lambda.factor}{The factor for getting the minimal value
 in the \code{lambda} sequence, where
-\code{min(lambda)} = \code{lambda.factor} * \code{max(lambda)}
+\code{min(lambda) = lambda.factor * max(lambda)}
 and \code{max(lambda)} is the smallest value of \code{lambda}
-for which all coefficients (except the intercept when it is present)
+for which all coefficients (except the intercept)
 are penalized to zero. The default depends on the relationship
 between \eqn{n} (the number of rows in the design matrix) and
-\eqn{p} (the number of predictors). If \eqn{n < p}, it defaults to
-\code{0.05}. If \eqn{n > p}, the default is \code{0.001},
-closer to zero.  A very small value of \code{lambda.factor} will
-lead to a saturated fit. The argument takes no effect if there is a
-user-supplied \code{lambda} sequence.}
+\eqn{p} (the number of predictors): if \eqn{n < p}, it is
+\code{0.01}; otherwise it is \code{1e-04}. A very small value of
+\code{lambda.factor} will lead to a saturated fit. The argument has no
+effect if a \code{lambda} sequence is supplied by the user.}
 
 \item{lambda}{A user-supplied \code{lambda} sequence. Typically,
 by leaving this option unspecified, users can have the program
@@ -50,21 +54,29 @@ compute its own \code{lambda} sequence based on \code{nlambda}
 and \code{lambda.factor}. It is better to supply, if necessary,
 a decreasing sequence of \code{lambda} values than a single
 (small) value. The program will ensure that the user-supplied
-\code{lambda} sequence is sorted in decreasing order before}
+\code{lambda} sequence is sorted in decreasing order before
+fitting the model to take advantage of the warm-start technique.}
 
-\item{lam2}{Regularization parameter \code{lambda2} for the
-quadratic penalty of the coefficients. Unlike \code{lambda},
-only one value of \code{lambda2} is used for each fitting process.}
+\item{lam2}{Regularization parameter \eqn{\lambda_2} for the
+quadratic (ridge) penalty on the coefficients. Unlike \code{lambda},
+only one value of \code{lam2} is used for each fitting process.
+Default is 0 (lasso penalty).}
 
-\item{hval}{Smoothing parameter for the smoothed hinge loss, default is 1.}
+\item{hval}{Initial bandwidth of the uniform-kernel convolution smoothing
+of the hinge loss. Default is 1. Inside the algorithm the bandwidth is
+divided by 8 (at most three times) until the solution satisfies the
+KKT conditions of the original (non-smooth) problem to a fixed
+tolerance; see \code{is_exact}.}
 
 \item{pf}{L1 penalty factor of length \eqn{p} used for the adaptive
-LASSO or adaptive elastic net. Separate L1 penalty weights can be
+lasso or adaptive elastic net. Separate L1 penalty weights can be
 applied to each coefficient to allow different L1 shrinkage.
 Can be 0 for some variables (but not all), which imposes no
 shrinkage, and results in that variable always being included
 in the model. Default is 1 for all variables (and implicitly
-infinity for variables in the \code{exclude} list).}
+infinity for variables in the \code{exclude} list). A matrix with
+\code{nlambda} columns (one penalty-factor vector per \code{lambda}
+value) is also accepted.}
 
 \item{pf2}{L2 penalty factor of length \eqn{p} used for adaptive
 elastic net. Separate L2 penalty weights can be applied to
@@ -79,47 +91,75 @@ Default is none. Equivalent to an infinite penalty factor.}
 Useful for very large \eqn{p} when a partial path is desired.
 Default is \eqn{p+1}.}
 
-\item{pmax}{Maximum count of non-zero coefficients across the solution path.}
+\item{pmax}{The maximum number of coefficients allowed ever
+to be nonzero along the solution path. For example, once
+\eqn{\beta_j} enters the model, no matter how many times it
+exits or re-enters the model through the path, it will be
+counted only once. Default is \code{min(dfmax * 1.2, p)}.}
 
 \item{standardize}{Logical flag for variable standardization,
 prior to fitting the model sequence. The coefficients are
-always returned to the original scale. Default is \code{TRUE}.}
+always returned on the original scale. Default is \code{TRUE}.}
 
-\item{eps}{Convergence criterion for stopping the algorithm.}
+\item{eps}{Convergence threshold for coordinate descent: iterations
+stop when the largest squared change of any coefficient within one
+pass falls below \code{eps}. Default is \code{1e-08}.}
 
-\item{maxit}{Maximum number of iterations permitted.}
+\item{maxit}{Maximum number of coordinate-descent passes over the data,
+summed over the whole \code{lambda} path. Default is \code{1e+06}.}
 
-\item{sigma}{Penalty parameter in the quadratic term of the augmented Lagrangian.}
+\item{sigma}{Penalty parameter of the quadratic term in the augmented
+Lagrangian used by the exact projection step (only used when
+\code{is_exact = TRUE}). Must be positive. Default is 0.9.}
 
-\item{is_exact}{If \code{TRUE}, solutions are computed exactly; otherwise, approximations are used.}
+\item{is_exact}{Logical. If \code{FALSE} (the default), the minimizer of
+the smoothed problem at the last bandwidth is returned; it satisfies
+the KKT conditions of the hinge-loss problem approximately and its
+hinge-loss objective is typically within a few percent of the optimum.
+If \code{TRUE}, an additional ADMM-type projection step is applied at
+small bandwidths, which yields the exact solution of the hinge-loss
+problem (for \code{lambda = 0} it agrees with the solution of the
+standard linear SVM quadratic program) at a higher computational cost.}
 }
 \value{
-An object with S3 class \code{hdsvm} consisting of
-  \item{call}{the call that produced this object}
-  \item{b0}{intercept sequence of length \code{length(lambda)}}
-  \item{beta}{a \code{p*length(lambda)} matrix of coefficients,
-              stored as a sparse matrix (\code{dgCMatrix} class,
-              the standard class for sparse numeric matrices in
-              the \code{Matrix} package.). To convert it into
-              normal type matrix, use \code{as.matrix()}.}
-  \item{lambda}{the actual sequence of \code{lambda} values used}
-  \item{df}{the number of nonzero coefficients for each value
-            of \code{lambda}.}
-  \item{npasses}{the number of iterations for every lambda value}
-  \item{jerr}{error flag, for warnings and errors, 0 if no error.}
+An object with S3 class \code{"hdsvm"} consisting of
+  \item{call}{the call that produced this object.}
+  \item{b0}{intercept sequence of length \code{length(lambda)}.}
+  \item{beta}{a \eqn{p \times} \code{length(lambda)} matrix of
+    coefficients, stored as a sparse matrix (\code{dgCMatrix} class,
+    the standard class for sparse numeric matrices in the \code{Matrix}
+    package). To convert it into an ordinary matrix, use
+    \code{as.matrix()}.}
+  \item{lambda}{the actual sequence of \code{lambda} values used.}
+  \item{df}{the number of nonzero coefficients for each value of
+    \code{lambda}.}
+  \item{dim}{dimension of the coefficient matrix.}
+  \item{npasses}{the number of coordinate-descent passes for every
+    \code{lambda} value.}
+  \item{jerr}{error flag, for warnings and errors; 0 if no error.}
+  \item{hval}{the initial smoothing bandwidth used.}
+  \item{lam2}{the \eqn{\lambda_2} value used.}
 }
 \description{
-Fits a penalized support vector machine (SVM) model using a range of \code{lambda} values,
-allowing for detailed control over regularization parameters and model complexity.
+Fits the solution path of the elastic-net penalized linear support vector
+machine (SVM) over a grid of values of the tuning parameter \code{lambda},
+using the finite smoothing algorithm with coordinate descent, warm
+starts, and active-set updates.
 }
 \details{
-The function utilizes the hinge loss function combined with elastic net penalization:
-\deqn{1'[\max\{1 - y_i (\beta_0 + X_i^\top \beta), 0\}]/N + \lambda_1 \cdot |pf_1 \circ \beta|_1 +
-0.5 \cdot \lambda_2 \cdot (\sqrt{pf_2} \circ \beta)^2,}
-where \eqn{\circ} denotes the Hadamard product. 
+The penalized SVM problem solved is
+\deqn{\min_{b_0, \beta} \frac{1}{n}\sum_{i=1}^n
+  \max\{1 - y_i (b_0 + x_i^\top \beta), 0\}
+  + \lambda_1 |pf_1 \circ \beta|_1
+  + \frac{\lambda_2}{2} \|\sqrt{pf_2} \circ \beta\|_2^2,}
+where \eqn{\circ} denotes the Hadamard product. The hinge loss is
+replaced by its convolution with a uniform kernel of bandwidth
+\code{hval}, which yields a smooth surrogate that is minimized by
+coordinate descent; the bandwidth is then shrunk and the fit is
+refined (the finite smoothing algorithm of Tang, Zhang, and Wang, 2024).
 
 For faster computation, if the algorithm is not converging or
-running slow, consider increasing \code{eps}, increasing
+running slowly, consider increasing \code{eps}, increasing
 \code{sigma}, decreasing \code{nlambda}, or increasing
 \code{lambda.factor} before increasing \code{maxit}.
 }
@@ -133,8 +173,19 @@ x <- rbind(x1, x2)
 beta <- 0.1 * rnorm(p)
 prob <- plogis(c(x \%*\% beta))
 y <- 2 * rbinom(n, 1, prob) - 1
-lam2 <- 0.01
-fit <- hdsvm(x, y, lam2=lam2)
+fit <- hdsvm(x, y, lam2 = 0.01)
+fit
+predict(fit, newx = x[1:5, ], s = fit$lambda[10])
+}
+\references{
+Tang, Q., Zhang, Y., and Wang, B. (2024). Finite smoothing algorithm for
+high-dimensional support vector machines and quantile regression.
+\emph{Proceedings of the 41st International Conference on Machine
+Learning (ICML)}. \url{https://openreview.net/forum?id=RvwMTDYTOb}
+}
+\seealso{
+\code{\link{cv.hdsvm}}, \code{\link{nc.hdsvm}},
+  \code{\link{coef.hdsvm}}, \code{\link{predict.hdsvm}}
 }
 \keyword{classification}
-\keyword{svm}
+\keyword{models}

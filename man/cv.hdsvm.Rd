@@ -7,39 +7,52 @@
 cv.hdsvm(x, y, lambda = NULL, nfolds = 5L, foldid, ...)
 }
 \arguments{
-\item{x}{A numerical matrix with \eqn{n} rows (observations) and \eqn{p} columns (variables).}
+\item{x}{A numerical matrix with \eqn{n} rows (observations) and \eqn{p}
+columns (variables).}
 
-\item{y}{Response variable.}
+\item{y}{Binary response of length \eqn{n}; see \code{\link{hdsvm}}.}
 
-\item{lambda}{Optional; a user-supplied sequence of \code{lambda} values. If \code{NULL}, 
-\code{\link{hdsvm}} selects its own sequence.}
+\item{lambda}{Optional; a user-supplied sequence of \code{lambda} values.
+If \code{NULL}, \code{\link{hdsvm}} selects its own sequence.}
 
-\item{nfolds}{Number of folds for cross-validation. Defaults to 5.}
+\item{nfolds}{Number of folds for cross-validation. Default is 5.
+The smallest allowed value is 3.}
 
-\item{foldid}{Optional vector specifying the indices of observations in each fold.
-If provided, it overrides \code{nfolds}.}
+\item{foldid}{Optional vector of values between 1 and \code{nfolds}
+identifying the fold of each observation. If provided, it overrides
+\code{nfolds}.}
 
 \item{...}{Additional arguments passed to \code{\link{hdsvm}}.}
 }
 \value{
-An object with S3 class \code{cv.hdsvm} consisting of
-  \item{lambda}{Candidate \code{lambda} values.}
-  \item{cvm}{Mean cross-validation error.}
-  \item{cvsd}{Standard error of the mean cross-validation error.}
-  \item{cvup}{Upper confidence curve: \code{cvm} + \code{cvsd}.}
-  \item{cvlo}{Lower confidence curve: \code{cvm} - \code{cvsd}.}
-  \item{lambda.min}{\code{lambda} achieving the minimum cross-validation error.}
-  \item{lambda.1se}{Largest \code{lambda} within one standard error of the minimum error.}
-  \item{cv.min}{Cross-validation error at \code{lambda.min}.}
-  \item{cv.1se}{Cross-validation error at \code{lambda.1se}.}
+An object with S3 class \code{"cv.hdsvm"} consisting of
+  \item{lambda}{the \code{lambda} values used in the fits.}
+  \item{cvm}{mean cross-validation error, a vector of length
+    \code{length(lambda)}.}
+  \item{cvsd}{estimated standard error of \code{cvm}.}
+  \item{cvupper}{upper curve: \code{cvm + cvsd}.}
+  \item{cvlower}{lower curve: \code{cvm - cvsd}.}
+  \item{nzero}{number of nonzero coefficients at each \code{lambda}.}
+  \item{name}{a text string describing the error measure (for plotting).}
+  \item{call}{the call that produced this object.}
   \item{hdsvm.fit}{a fitted \code{\link{hdsvm}} object for the full data.}
-  \item{nzero}{Number of non-zero coefficients at each \code{lambda}.}
+  \item{lambda.min}{the \code{lambda} achieving the minimum
+    cross-validation error.}
+  \item{lambda.1se}{the largest \code{lambda} whose cross-validation error
+    is within one standard error of the minimum.}
+  \item{cvm.min}{cross-validation error at \code{lambda.min}.}
+  \item{cvm.1se}{cross-validation error at \code{lambda.1se}.}
 }
 \description{
-Performs k-fold cross-validation for \code{\link{hdsvm}}.
+Performs k-fold cross-validation for \code{\link{hdsvm}}. The held-out
+prediction error is measured with the hinge loss.
 }
 \details{
-This function computes the average cross-validation error and provides the standard error.
+The function first fits \code{\link{hdsvm}} on the full data to obtain
+the \code{lambda} sequence, then refits the model \code{nfolds} times,
+each time leaving out one fold. The cross-validation error curve is the
+average held-out hinge loss over all observations, and its standard error
+is computed from the held-out losses.
 }
 \examples{
 set.seed(315)
@@ -51,8 +64,13 @@ x <- rbind(x1, x2)
 beta <- 0.1 * rnorm(p)
 prob <- plogis(c(x \%*\% beta))
 y <- 2 * rbinom(n, 1, prob) - 1
-lam2 <- 0.01
-fit <- cv.hdsvm(x, y, lam2=lam2)
+cv.fit <- cv.hdsvm(x, y, lam2 = 0.01)
+cv.fit
+plot(cv.fit)
+}
+\seealso{
+\code{\link{hdsvm}}, \code{\link{coef.cv.hdsvm}},
+  \code{\link{predict.cv.hdsvm}}, \code{\link{plot.cv.hdsvm}}
 }
 \keyword{classification}
 \keyword{models}

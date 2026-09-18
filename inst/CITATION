@@ -1,0 +1,29 @@
+citHeader("To cite hdstats in publications use:")
+
+bibentry(bibtype = "Manual",
+  title  = "{hdstats}: High-Dimensional Penalized Huber, Quantile, and Rank Regression and Support Vector Machines",
+  author = c(person(given = "Yikai", family = "Zhang"),
+             person(given = "Qian", family = "Tang"),
+             person(given = "Boxiang", family = "Wang")),
+  year   = "2026",
+  note   = "R package version 0.2.0",
+  url    = "https://github.com/YikaiZhang95/hdstats",
+  textVersion = paste(
+    "Zhang, Y., Tang, Q., and Wang, B. (2026).",
+    "hdstats: High-Dimensional Penalized Huber, Quantile, and Rank Regression and Support Vector Machines.",
+    "R package version 0.2.0. https://github.com/YikaiZhang95/hdstats"))
+
+bibentry(bibtype = "InProceedings",
+  title     = "Finite Smoothing Algorithm for High-Dimensional Support Vector Machines and Quantile Regression",
+  author    = c(person(given = "Qian", family = "Tang"),
+                person(given = "Yikai", family = "Zhang"),
+                person(given = "Boxiang", family = "Wang")),
+  booktitle = "Proceedings of the 41st International Conference on Machine Learning",
+  year      = "2024",
+  url       = "https://openreview.net/forum?id=RvwMTDYTOb",
+  header    = "To cite the finite smoothing algorithm use:",
+  textVersion = paste(
+    "Tang, Q., Zhang, Y., and Wang, B. (2024).",
+    "Finite Smoothing Algorithm for High-Dimensional Support Vector Machines and Quantile Regression.",
+    "Proceedings of the 41st International Conference on Machine Learning.",
+    "https://openreview.net/forum?id=RvwMTDYTOb"))

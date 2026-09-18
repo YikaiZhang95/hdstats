@@ -7,23 +7,25 @@
 \method{coef}{cv.nc.hdqr}(object, s = c("lambda.1se", "lambda.min"), ...)
 }
 \arguments{
-\item{object}{A fitted \code{cv.nc.hdqr} object from which coefficients are to be extracted.}
+\item{object}{A fitted \code{\link{cv.nc.hdqr}} object.}
 
-\item{s}{Specifies the \code{lambda} values at which coefficients are requested.
-The default is \code{s = "lambda.1se"}, representing the largest \code{lambda} such that the cross-validation
-error estimate is within one standard error of the minimum. Alternatively, \code{s = "lambda.min"}
-corresponds to the \code{lambda} yielding the minimum cross-validation error. If \code{s} is numeric, these
-values are directly used as the \code{lambda} values for coefficient extraction.}
+\item{s}{Value(s) of the penalty parameter \code{lambda} at which
+coefficients are desired. The default is \code{s = "lambda.1se"}, the
+largest value of \code{lambda} such that the cross-validation error is
+within one standard error of the minimum. Alternatively,
+\code{s = "lambda.min"} gives the value minimizing the cross-validation
+error. If \code{s} is numeric, these are taken as the actual values of
+\code{lambda} to use.}
 
 \item{...}{Not used.}
 }
 \value{
-Returns a vector or matrix of coefficients corresponding to the specified `lambda` values.
+A matrix of coefficients at the specified \code{lambda} values.
 }
 \description{
-Retrieves coefficients at specified values of \code{lambda} from a fitted \code{cv.nc.hdqr} model.
-Utilizes the stored \code{nchdqr.fit} object and the optimal \code{lambda} values determined during
-the cross-validation process.
+Retrieves coefficients from a cross-validated \code{\link{nc.hdqr}}
+model, using the stored full-data fit and the value of \code{lambda}
+selected by cross-validation.
 }
 \examples{
 set.seed(315)
@@ -33,11 +35,12 @@ x <- matrix(data = rnorm(n * p, mean = 0, sd = 1), nrow = n, ncol = p)
 beta_star <- c(c(2, 1.5, 0.8, 1, 1.75, 0.75, 0.3), rep(0, (p - 7)))
 eps <- rnorm(n, mean = 0, sd = 1)
 y <- x \%*\% beta_star + eps
-tau <- 0.5
-lam2 <- 0.01
-lambda <- 10^(seq(1,-4, length.out=30))
-\donttest{cv.nc.fit <- cv.nc.hdqr(x = x, y = y, tau = tau, lambda = lambda, lam2 = lam2)}
-\donttest{coef(cv.nc.fit, s = c(0.02, 0.03))}
+lambda <- 10^(seq(1, -4, length.out = 10))
+\donttest{
+cv.nc.fit <- cv.nc.hdqr(x = x, y = y, tau = 0.5, lambda = lambda,
+                        lam2 = 0.01)
+coef(cv.nc.fit, s = c(0.02, 0.03))
+}
 }
 \seealso{
 \code{\link{cv.nc.hdqr}}, \code{\link{predict.cv.nc.hdqr}}

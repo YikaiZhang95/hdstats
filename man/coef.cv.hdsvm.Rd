@@ -2,27 +2,29 @@
 % Please edit documentation in R/cv.hdsvm-methods.R
 \name{coef.cv.hdsvm}
 \alias{coef.cv.hdsvm}
-\title{Extract Coefficients from a `cv.hdsvm` Object}
+\title{Extract Coefficients from a \code{cv.hdsvm} Object}
 \usage{
 \method{coef}{cv.hdsvm}(object, s = c("lambda.1se", "lambda.min"), ...)
 }
 \arguments{
-\item{object}{A fitted `cv.hdsvm()` object from which coefficients are to be extracted.}
+\item{object}{A fitted \code{\link{cv.hdsvm}} object.}
 
-\item{s}{Specifies the value(s) of the penalty parameter `lambda` for which coefficients are desired.
-The default is `s = "lambda.1se"`, which corresponds to the largest value of `lambda` such that the
-cross-validation error estimate is within one standard error of the minimum. Alternatively,
-`s = "lambda.min"` can be used, corresponding to the minimum of the cross-validation error estimate.
-If `s` is numeric, these are taken as the actual values of `lambda` to use.}
+\item{s}{Value(s) of the penalty parameter \code{lambda} at which
+coefficients are desired. The default is \code{s = "lambda.1se"}, the
+largest value of \code{lambda} such that the cross-validation error is
+within one standard error of the minimum. Alternatively,
+\code{s = "lambda.min"} gives the value minimizing the cross-validation
+error. If \code{s} is numeric, these are taken as the actual values of
+\code{lambda} to use.}
 
 \item{...}{Not used.}
 }
 \value{
-Returns the coefficients at the specified `lambda` values.
+A matrix of coefficients at the specified \code{lambda} values.
 }
 \description{
-Retrieves coefficients from a cross-validated `hdsvm()` model, using the
-stored `"hdsvm.fit"` object and the optimal `lambda` value determined during
+Retrieves coefficients from a cross-validated \code{\link{hdsvm}} model,
+using the stored full-data fit and the value of \code{lambda} selected by
 cross-validation.
 }
 \examples{

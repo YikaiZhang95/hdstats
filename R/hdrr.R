@@ -36,7 +36,16 @@
 #'   \item{df}{Number of nonzero coefficients at each \code{lambda}.}
 #'   \item{qrfit}{The underlying \code{hdqr} fit on the differenced data.}
 #'
-#' @seealso \code{\link{hdqr}}, \code{\link{coef.hdqr}}, \code{\link{predict.hdqr}}
+#' @seealso \code{\link{cv.hdrr}}, \code{\link{hdqr}}, \code{\link{coef.hdqr}},
+#'   \code{\link{predict.hdqr}}
+#' @references
+#' Jaeckel, L. A. (1972). Estimating regression coefficients by minimizing the
+#' dispersion of the residuals. \emph{The Annals of Mathematical Statistics},
+#' 43(5), 1449--1458. \doi{10.1214/aoms/1177692377}
+#'
+#' Hettmansperger, T. P. and McKean, J. W. (2011). \emph{Robust Nonparametric
+#' Statistical Methods}, 2nd edition. Chapman and Hall/CRC.
+#' @keywords models regression robust
 #'
 #' @importFrom stats median
 #' @export
@@ -58,7 +67,8 @@ hdrr <- function(x, y, lam2 = 0.01, ...) {
 
   # all i < j pairwise differences (Gehan/Wilcoxon dispersion)
   pr <- which(upper.tri(matrix(0, n, n)), arr.ind = TRUE)
-  i1 <- pr[, 1]; i2 <- pr[, 2]
+  i1 <- pr[, 1]
+  i2 <- pr[, 2]
   xd <- x[i1, , drop = FALSE] - x[i2, , drop = FALSE]
   yd <- y[i1] - y[i2]
 

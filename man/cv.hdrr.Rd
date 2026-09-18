@@ -25,27 +25,26 @@ provided, it overrides \code{nfolds}.}
 }
 \value{
 An object with S3 class \code{c("cv.hdrr", "cv.hdqr")}. Because it
-stores the full-data fit and carries the standard cross-validation fields,
-the \code{\link{coef.cv.hdqr}} and \code{\link{predict.cv.hdqr}} methods
-apply directly. Components:
-\item{lambda}{Candidate \code{lambda} values.}
-\item{cvm}{Mean cross-validation error.}
-\item{cvsd}{Standard error of the mean cross-validation error.}
-\item{cvupper, cvlower}{\code{cvm} plus/minus \code{cvsd}.}
-\item{lambda.min}{\code{lambda} achieving the minimum CV error.}
-\item{lambda.1se}{Largest \code{lambda} within one standard error of the minimum.}
-\item{nzero}{Number of non-zero coefficients at each \code{lambda}.}
-\item{hdqr.fit}{The full-data \code{\link{hdrr}} fit (an object of class
-  \code{c("hdrr", "hdqr")}).}
+  stores the full-data fit and carries the standard cross-validation fields,
+  the \code{\link{coef.cv.hdqr}} and \code{\link{predict.cv.hdqr}} methods
+  apply directly. Components:
+  \item{lambda}{Candidate \code{lambda} values.}
+  \item{cvm}{Mean cross-validation error.}
+  \item{cvsd}{Standard error of the mean cross-validation error.}
+  \item{cvupper, cvlower}{\code{cvm} plus/minus \code{cvsd}.}
+  \item{lambda.min}{\code{lambda} achieving the minimum CV error.}
+  \item{lambda.1se}{Largest \code{lambda} within one standard error of the minimum.}
+  \item{nzero}{Number of non-zero coefficients at each \code{lambda}.}
+  \item{name}{a text string describing the error measure (for plotting).}
+  \item{call}{the call that produced this object.}
+  \item{hdqr.fit}{The full-data \code{\link{hdrr}} fit (an object of class
+    \code{c("hdrr", "hdqr")}).}
 }
 \description{
 Performs k-fold cross-validation for \code{\link{hdrr}}. The held-out
 prediction error is measured with the median (\eqn{\tau = 0.5}) check loss,
 i.e. mean absolute error, consistent with the median-regression formulation
 underlying canonical Wilcoxon rank regression.
-}
-\seealso{
-\code{\link{hdrr}}, \code{\link{cv.hdqr}}
 }
 \examples{
 set.seed(1)
@@ -54,6 +53,9 @@ x <- matrix(rnorm(n * p), n, p)
 y <- x[, 1] * 2 - x[, 2] * 1.5 + rnorm(n)
 cv.fit <- cv.hdrr(x, y, lam2 = 0.01, nfolds = 3)
 coef(cv.fit, s = "lambda.min")
+}
+\seealso{
+\code{\link{hdrr}}, \code{\link{cv.hdqr}}
 }
 \keyword{models}
 \keyword{regression}

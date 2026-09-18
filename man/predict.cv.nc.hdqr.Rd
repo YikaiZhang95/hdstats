@@ -7,28 +7,29 @@
 \method{predict}{cv.nc.hdqr}(object, newx, s = c("lambda.1se", "lambda.min"), ...)
 }
 \arguments{
-\item{object}{A fitted \code{cv.nc.hdqr} object from which predictions are to be made.}
+\item{object}{A fitted \code{\link{cv.nc.hdqr}} object.}
 
-\item{newx}{Matrix of new predictor values for which predictions are desired.
-This must be a matrix and is a required argument.}
+\item{newx}{Matrix of new predictor values at which predictions are to be
+made. This is a required argument.}
 
-\item{s}{Specifies the value(s) of the penalty parameter \code{lambda} at which predictions
-are desired. The default is \code{s = "lambda.1se"}, representing the largest value of \code{lambda}
-such that the cross-validation error estimate is within one standard error of the minimum.
-Alternatively, \code{s = "lambda.min"} can be used, corresponding to the minimum of the
-cross-validation error estimate. If \code{s} is numeric, these are taken as the actual values
-of \code{lambda} to use for predictions.}
+\item{s}{Value(s) of the penalty parameter \code{lambda} at which
+predictions are desired. The default is \code{s = "lambda.1se"}, the
+largest value of \code{lambda} such that the cross-validation error is
+within one standard error of the minimum. Alternatively,
+\code{s = "lambda.min"} gives the value minimizing the cross-validation
+error. If \code{s} is numeric, these are taken as the actual values of
+\code{lambda} to use.}
 
 \item{...}{Not used.}
 }
 \value{
-Returns a matrix or vector of predicted values corresponding to the specified
-  `lambda` values.
+A matrix of predicted values, one row per row of \code{newx} and
+  one column per value of \code{s}.
 }
 \description{
-Generates predictions using a fitted \code{cv.nc.hdqr} object. This function utilizes the
-stored \code{nchdqr.fit} object and an optimal value of \code{lambda} determined during the
-cross-validation process.
+Generates predictions from a cross-validated \code{\link{nc.hdqr}}
+model, using the stored full-data fit and the value of \code{lambda}
+selected by cross-validation.
 }
 \examples{
 set.seed(315)
@@ -38,12 +39,13 @@ x <- matrix(data = rnorm(n * p, mean = 0, sd = 1), nrow = n, ncol = p)
 beta_star <- c(c(2, 1.5, 0.8, 1, 1.75, 0.75, 0.3), rep(0, (p - 7)))
 eps <- rnorm(n, mean = 0, sd = 1)
 y <- x \%*\% beta_star + eps
-tau <- 0.5
-lam2 <- 0.01
-lambda <- 10^(seq(1,-4, length.out=10))
-\donttest{cv.nc.fit <- cv.nc.hdqr(x = x, y = y, tau = tau, lambda = lambda, lam2 = lam2)}
-\donttest{predict(cv.nc.fit, newx = x[50:60, ], s = "lambda.min")}
+lambda <- 10^(seq(1, -4, length.out = 10))
+\donttest{
+cv.nc.fit <- cv.nc.hdqr(x = x, y = y, tau = 0.5, lambda = lambda,
+                        lam2 = 0.01)
+predict(cv.nc.fit, newx = x[50:60, ], s = "lambda.min")
+}
 }
 \seealso{
-\code{\link{cv.nc.hdqr}}, \code{\link{predict.cv.nc.hdqr}}
+\code{\link{cv.nc.hdqr}}, \code{\link{coef.cv.nc.hdqr}}
 }

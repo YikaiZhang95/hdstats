@@ -1,4 +1,3 @@
-// [[Rcpp::plugins(cpp11)]]
 #include <Rcpp.h>
 #include <cmath>
 #include <algorithm>
@@ -110,7 +109,7 @@ static void standardize_cpp(NumericMatrix& X,
 
 // Soft-threshold update for one variable.
 // Uses pre-maintained dl[] for the gradient; updates r[] and dl[] in-place.
-// No loop-carried dependency → both passes are SIMD-vectorizable.
+// No loop-carried dependency -> both passes are SIMD-vectorizable.
 // Returns d^2 (0 if unchanged).
 inline double update_coord(const double* xk, int n,
                            double& bk,
@@ -128,7 +127,7 @@ inline double update_coord(const double* xk, int n,
   bk = new_bk;
   if (d == 0.0) return 0.0;
 
-  // Pass 2: SAXPY on r and clip-update dl — NO loop-carried dependency → vectorizable
+  // Pass 2: SAXPY on r and clip-update dl - NO loop-carried dependency -> vectorizable
   for (int i = 0; i < n; ++i) {
     const double ri = r_ptr[i] - xk[i] * d;
     r_ptr[i] = ri;
@@ -150,7 +149,7 @@ inline double update_intercept(double& b0, double* r_ptr, double* dl_ptr, int n,
   if (d == 0.0) return 0.0;
   b0 += d;
 
-  // SAXPY + clip-update — vectorizable
+  // SAXPY + clip-update - vectorizable
   for (int i = 0; i < n; ++i) {
     const double ri = r_ptr[i] - d;
     r_ptr[i] = ri;
@@ -260,7 +259,7 @@ static List huber_path_core(double alpha,
     double lam2 = lam2_in;
     if (alpha != -1.0) lam2 = al * (1.0 - alpha) * 0.5 / alpha;
 
-    // Precompute per-variable penalty terms once per lambda — avoids
+    // Precompute per-variable penalty terms once per lambda - avoids
     // repeated pf(k,pfl) matrix access and al/lam2 multiplications in hot loops
     for (int k = 0; k < p; ++k) {
       al_pf[k]    = al * pf(k, pfl);
@@ -376,45 +375,6 @@ done_path:
   );
 }
 
-// --------------------------- Exported: huber_path_cpp ---------------------------
-
-// [[Rcpp::export]]
-List huber_path_cpp(double alpha,
-                    double lam2,
-                    double hval,
-                    NumericVector maj,
-                    double mval,
-                    NumericMatrix X,
-                    NumericVector y,
-                    IntegerVector ju,
-                    int pfncol,
-                    NumericMatrix pf,
-                    NumericVector pf2,
-                    int dfmax,
-                    int pmax,
-                    int nlam,
-                    double flmin,
-                    NumericVector ulam,
-                    double eps,
-                    int maxit,
-                    int istrong) {
-  const int n = X.nrow(), p = X.ncol();
-  if (y.size() != n) stop("Length of y must equal nrow(X).");
-  if (maj.size() != p) stop("Length of maj must equal ncol(X).");
-  if (pf.nrow() != p) stop("pf must have nrow = ncol(X).");
-  if (!(pfncol == 1 || pf.ncol() == nlam))
-    stop("pfncol must be 1 or equal to nlam and match pf.ncol().");
-  if (pf2.size() != p) stop("pf2 must have length ncol(X).");
-  if (ulam.size() != nlam && flmin >= 1.0)
-    stop("When flmin >= 1, length(ulam) must equal nlam.");
-
-  // clone maj to avoid mutating the caller's vector (core scales it by mval)
-  return huber_path_core(alpha, lam2, hval, clone(maj), mval,
-                         X, y, ju, pfncol, pf, pf2,
-                         dfmax, pmax, nlam, flmin, ulam,
-                         eps, maxit, istrong);
-}
-
 // --------------------------- Exported: huber_cd_cpp ---------------------------
 
 // [[Rcpp::export]]
@@ -479,15 +439,18 @@ List huber_cd_cpp(double alpha,
                           _["alam"]=NumericVector(0), _["npass"]=0, _["jerr"]=10000);
   }
 
-  clamp_nonneg(pf);
-  clamp_nonneg_vec(pf2);
+  // work on copies so that the caller's R objects are never modified in place
+  NumericMatrix pfc = clone(pf);
+  NumericVector pf2c = clone(pf2);
+  clamp_nonneg(pfc);
+  clamp_nonneg_vec(pf2c);
 
   NumericMatrix Xstd = clone(X);
   NumericVector xmean, xnorm, maj;
   standardize_cpp(Xstd, ju, isd, xmean, xnorm, maj);
 
   List res = huber_path_core(alpha, lam2, hval, clone(maj), 1.0,
-                             Xstd, y, ju, pfncol, pf, pf2,
+                             Xstd, y, ju, pfncol, pfc, pf2c,
                              dfmax, pmax, nlam, flmin, ulam,
                              eps, maxit, istrong);
 
@@ -528,13 +491,3 @@ List huber_cd_cpp(double alpha,
   return res;
 }
 
-// --------------------------- Exported: huber_drv_cpp ---------------------------
-
-// [[Rcpp::export]]
-NumericVector huber_drv_cpp(const NumericMatrix& X,
-                            const NumericVector& r,
-                            const double hval) {
-  const int n = X.nrow();
-  if (r.size() != n) stop("Length of r must match nrow(X).");
-  return huber_drv_internal(X, r, hval);
-}

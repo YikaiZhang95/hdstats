@@ -4,3 +4,8 @@
 ^.*\.Rproj$
 ^\.Rproj\.user$
 ^\.DS_Store$
+^cran-comments\.md$
+^doc$
+^Meta$
+^.*\.Rcheck$
+^.*\.tar\.gz$

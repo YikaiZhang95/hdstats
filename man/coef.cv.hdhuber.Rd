@@ -2,27 +2,29 @@
 % Please edit documentation in R/cvhuber-methods.R
 \name{coef.cv.hdhuber}
 \alias{coef.cv.hdhuber}
-\title{Extract Coefficients from a `cv.hdhuber` Object}
+\title{Extract Coefficients from a \code{cv.hdhuber} Object}
 \usage{
 \method{coef}{cv.hdhuber}(object, s = c("lambda.1se", "lambda.min"), ...)
 }
 \arguments{
-\item{object}{A fitted [cv.hdhuber()] object from which coefficients are to be extracted.}
+\item{object}{A fitted \code{\link{cv.hdhuber}} object.}
 
-\item{s}{Specifies the value(s) of the penalty parameter `lambda` for which coefficients are desired.
-The default is `s = "lambda.1se"`, which corresponds to the largest value of `lambda` such that the
-cross-validation error estimate is within one standard error of the minimum. Alternatively,
-`s = "lambda.min"` can be used, corresponding to the minimum of the cross-validation error estimate.
-If `s` is numeric, these are taken as the actual values of `lambda` to use.}
+\item{s}{Value(s) of the penalty parameter \code{lambda} at which
+coefficients are desired. The default is \code{s = "lambda.1se"}, the
+largest value of \code{lambda} such that the cross-validation error is
+within one standard error of the minimum. Alternatively,
+\code{s = "lambda.min"} gives the value minimizing the cross-validation
+error. If \code{s} is numeric, these are taken as the actual values of
+\code{lambda} to use.}
 
 \item{...}{Not used.}
 }
 \value{
-Returns the coefficients at the specified `lambda` values.
+A matrix of coefficients at the specified \code{lambda} values.
 }
 \description{
-Retrieves coefficients from a cross-validated `hdhuber()` model, using the
-stored `"hdhuber.fit"` object and the optimal `lambda` value determined during
+Retrieves coefficients from a cross-validated \code{\link{hdhuber}} model,
+using the stored full-data fit and the value of \code{lambda} selected by
 cross-validation.
 }
 \examples{
@@ -33,11 +35,9 @@ x <- matrix(data = rnorm(n * p, mean = 0, sd = 1), nrow = n, ncol = p)
 beta_star <- c(c(2, 1.5, 0.8, 1, 1.75, 0.75, 0.3), rep(0, (p - 7)))
 eps <- rnorm(n, mean = 0, sd = 1)
 y <- x \%*\% beta_star + eps
-delta <- 0.5
-lam2 <- 0.01
-cv.fit <- cv.hdhuber(x = x, y = y, delta = delta, lam2 = lam2)
+cv.fit <- cv.hdhuber(x = x, y = y, delta = 0.5, lam2 = 0.01)
 coef(cv.fit, s = c(0.02, 0.03))
 }
 \seealso{
-[cv.hdhuber()], [predict.cv.hdhuber()]
+\code{\link{cv.hdhuber}}, \code{\link{predict.cv.hdhuber}}
 }

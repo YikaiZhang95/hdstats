@@ -2,7 +2,7 @@
 % Please edit documentation in R/cv.hdsvm-methods.R
 \name{predict.cv.hdsvm}
 \alias{predict.cv.hdsvm}
-\title{Make Predictions from a `cv.hdsvm` Object}
+\title{Make Predictions from a \code{cv.hdsvm} Object}
 \usage{
 \method{predict}{cv.hdsvm}(
   object,
@@ -13,31 +13,33 @@
 )
 }
 \arguments{
-\item{object}{A fitted `cv.hdsvm()` object from which predictions are to be made.}
+\item{object}{A fitted \code{\link{cv.hdsvm}} object.}
 
-\item{newx}{Matrix of new predictor values for which predictions are desired.
-This must be a matrix and is a required argument.}
+\item{newx}{Matrix of new predictor values at which predictions are to be
+made. This is a required argument.}
 
-\item{s}{Specifies the value(s) of the penalty parameter `lambda` at which predictions
-are desired. The default is `s = "lambda.1se"`, representing the largest value of `lambda`
-such that the cross-validation error estimate is within one standard error of the minimum.
-Alternatively, `s = "lambda.min"` can be used, corresponding to the minimum of the
-cross-validation error estimate. If `s` is numeric, these are taken as the actual values
-of `lambda` to use for predictions.}
+\item{s}{Value(s) of the penalty parameter \code{lambda} at which
+predictions are desired. The default is \code{s = "lambda.1se"}, the
+largest value of \code{lambda} such that the cross-validation error is
+within one standard error of the minimum. Alternatively,
+\code{s = "lambda.min"} gives the value minimizing the cross-validation
+error. If \code{s} is numeric, these are taken as the actual values of
+\code{lambda} to use.}
 
-\item{type}{Type of prediction required. Type `"class"` produces the predicted binary class labels and
-type `"loss"` returns the fitted values. Default is \code{"class"}.}
+\item{type}{Type \code{"class"} (the default) returns the predicted class
+labels (\eqn{-1}/\eqn{+1}); type \code{"loss"} returns the linear
+predictor.}
 
 \item{...}{Not used.}
 }
 \value{
-Returns a matrix or vector of predicted values corresponding to the specified
-  `lambda` values.
+A matrix of predicted values, one row per row of \code{newx} and
+  one column per value of \code{s}.
 }
 \description{
-Generates predictions using a fitted `cv.hdsvm()` object. This function utilizes the
-stored `hdsvm.fit` object and an optimal value of `lambda` determined during the
-cross-validation process.
+Generates predictions from a cross-validated \code{\link{hdsvm}} model,
+using the stored full-data fit and the value of \code{lambda} selected by
+cross-validation.
 }
 \examples{
 set.seed(315)

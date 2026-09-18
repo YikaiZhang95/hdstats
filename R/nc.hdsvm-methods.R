@@ -1,24 +1,24 @@
-#' Extract Model Coefficients from a `nc.hdsvm` Object
+#' Extract Model Coefficients from a \code{nc.hdsvm} Object
 #'
-#' Retrieves the coefficients at specified values of `lambda` from a fitted `nc.hdsvm()` model.
+#' Retrieves the coefficients at specified values of \code{lambda} from a
+#' fitted \code{\link{nc.hdsvm}} object. If \code{s}, the vector of
+#' \code{lambda} values, contains values not used in the model fitting,
+#' linear interpolation between the closest fitted \code{lambda} values is
+#' used.
 #'
-#' This function extracts coefficients for specified `lambda` values from a `nc.hdsvm()` object.
-#' If `s`, the vector of `lambda` values, contains values not originally used in the model fitting,
-#' the `coef` function employs linear interpolation between the closest `lambda` values from the 
-#' original sequence to estimate coefficients at the new `lambda` values.
-#'
-#' @importFrom methods rbind2
-#' @param object Fitted `nc.hdsvm()` object.
-#' @param s Values of the penalty parameter `lambda` for which coefficients are requested.
-#'   Defaults to the entire sequence used during the model fit.
-#' @param type Type of prediction required. Type `"coefficients"` computes the coefficients at the requested 
-#'   values for `s`. Type `"nonzero"` returns a list of the indices of the nonzero coefficients for each 
-#'   value of \code{s}.
+#' @param object Fitted \code{\link{nc.hdsvm}} object.
+#' @param s Values of the penalty parameter \code{lambda} at which
+#'   coefficients are requested. Default is the entire sequence used during
+#'   the model fit.
+#' @param type Type \code{"coefficients"} (the default) returns the
+#'   coefficients at the requested values of \code{s}; type \code{"nonzero"}
+#'   returns a list of the indices of the nonzero coefficients for each value
+#'   of \code{s}.
 #' @param ... Not used.
+#' @return A matrix of coefficients (intercept in the first row, one column
+#'   per value of \code{s}), or a list of indices when
+#'   \code{type = "nonzero"}.
 #' @seealso \code{\link{nc.hdsvm}}, \code{\link{predict.nc.hdsvm}}
-#'
-#' @return Returns a matrix or vector of coefficients corresponding to the specified `lambda` values.
-#'
 #' @method coef nc.hdsvm
 #' @export
 #' @examples
@@ -31,53 +31,35 @@
 #' beta <- 0.1 * rnorm(p)
 #' prob <- plogis(c(x %*% beta))
 #' y <- 2 * rbinom(n, 1, prob) - 1
-#' lam2 <- 0.01
-#' lambda <- 10^(seq(1,-4, length.out = 30)) 
-#' \donttest{nc.fit <- nc.hdsvm(x = x, y = y, lambda = lambda, lam2 = lam2, pen = "scad")}
-#' \donttest{nc.coefs <- coef(nc.fit, s = nc.fit$lambda[3:5])}
-
-coef.nc.hdsvm <- function(object, s=NULL, 
-    type=c("coefficients", "nonzero"), ...) {
+#' lambda <- 10^(seq(1, -4, length.out = 30))
+#' \donttest{
+#' nc.fit <- nc.hdsvm(x = x, y = y, lambda = lambda, lam2 = 0.01, pen = "scad")
+#' nc.coefs <- coef(nc.fit, s = nc.fit$lambda[3:5])
+#' }
+coef.nc.hdsvm <- function(object, s = NULL, type = c("coefficients", "nonzero"), ...) {
   type <- match.arg(type)
-  b0 <- t(as.matrix(object$b0))
-  rownames(b0) <- "(Intercept)"
-  nbeta <- rbind2(b0, object$beta)
-  if (!is.null(s)) {
-    vnames <- dimnames(nbeta)[[1]]
-    dimnames(nbeta) <- list(NULL, NULL)
-    lambda <- object$nc.lambda
-    lamlist <- lambda.interp(lambda, s)
-    nbeta <- nbeta[,lamlist$left,drop=FALSE] %*% 
-      Diagonal(x=lamlist$frac) +
-      nbeta[,lamlist$right,drop=FALSE] %*% 
-      Diagonal(x=1-lamlist$frac)
-    dimnames(nbeta) <- list(vnames, paste(seq(along=s)))
-  }
-  if (type == "coefficients") 
-    return(nbeta)
-  if (type == "nonzero") 
-    return(nonzero(nbeta[-1, , drop=FALSE], bystep=TRUE))
-} 
+  coef_path_type(object, s, type, lambda = object$nc.lambda)
+}
 
-#' Make Predictions from a `nc.hdsvm` Object
+#' Make Predictions from a \code{nc.hdsvm} Object
 #'
-#' Produces fitted values for new predictor data using a fitted `nc.hdsvm()` object.
+#' Produces class labels or the linear predictor for new predictor data
+#' using a fitted \code{\link{nc.hdsvm}} object at specified \code{lambda}
+#' values.
 #'
-#' This function generates predictions at specified `lambda` values from a fitted `nc.hdsvm()` object.
-#' It is essential to provide a new matrix of predictor values (`newx`) at which these predictions are to be made.
-#'
-#' @param object Fitted `nc.hdsvm()` object from which predictions are to be derived.
-#' @param newx Matrix of new predictor values for which predictions are desired.
-#'   This must be a matrix and is a required argument.
-#' @param s Values of the penalty parameter `lambda` for which predictions are requested.
-#'   Defaults to the entire sequence used during the model fit.
-#' @param type Type of prediction required. Type `"class"` produces the predicted binary class labels and
-#' type `"loss"` returns the fitted values. Default is \code{"class"}.
+#' @param object Fitted \code{\link{nc.hdsvm}} object.
+#' @param newx Matrix of new predictor values at which predictions are to be
+#'   made. This is a required argument.
+#' @param s Values of the penalty parameter \code{lambda} at which
+#'   predictions are requested. Default is the entire sequence used during
+#'   the model fit.
+#' @param type Type \code{"class"} (the default) returns the predicted class
+#'   labels (\eqn{-1}/\eqn{+1}); type \code{"loss"} returns the linear
+#'   predictor.
 #' @param ... Not used.
+#' @return A matrix of predicted values, one row per row of \code{newx} and
+#'   one column per value of \code{s}.
 #' @seealso \code{\link{nc.hdsvm}}, \code{\link{coef.nc.hdsvm}}
-#'
-#' @return Returns a vector or matrix of predicted values corresponding to the specified `lambda` values.
-#'
 #' @method predict nc.hdsvm
 #' @export
 #' @examples
@@ -90,27 +72,13 @@ coef.nc.hdsvm <- function(object, s=NULL,
 #' beta <- 0.1 * rnorm(p)
 #' prob <- plogis(c(x %*% beta))
 #' y <- 2 * rbinom(n, 1, prob) - 1
-#' lam2 <- 0.01
-#' lambda <- 10^(seq(1,-4, length.out = 30)) 
-#' \donttest{nc.fit <- nc.hdsvm(x = x, y = y, lambda = lambda, lam2 = lam2, pen = "scad")}
-#' \donttest{nc.preds <- predict(nc.fit, newx = tail(x), s = nc.fit$lambda[3:5])}
-
-predict.nc.hdsvm <- function(object, newx, s=NULL, type=c("class", "loss"),...) {
+#' lambda <- 10^(seq(1, -4, length.out = 30))
+#' \donttest{
+#' nc.fit <- nc.hdsvm(x = x, y = y, lambda = lambda, lam2 = 0.01, pen = "scad")
+#' nc.preds <- predict(nc.fit, newx = tail(x), s = nc.fit$lambda[3:5])
+#' }
+predict.nc.hdsvm <- function(object, newx, s = NULL, type = c("class", "loss"), ...) {
   type <- match.arg(type)
-  b0 <- t(as.matrix(object$b0))
-  rownames(b0) <- "(Intercept)"
-  nbeta <- rbind2(b0, object$beta)
-  if (!is.null(s)) {
-    vnames <- dimnames(nbeta)[[1]]
-    dimnames(nbeta) <- list(NULL, NULL)
-    lambda <- object$nc.lambda
-    lamlist <- lambda.interp(lambda, s)
-    nbeta <- nbeta[ , lamlist$left, drop=FALSE] %*% 
-            Diagonal(x=lamlist$frac) +
-            nbeta[ , lamlist$right, drop=FALSE] %*% 
-            Diagonal(x=1-lamlist$frac)
-    dimnames(nbeta) <- list(vnames, paste(seq(along=s)))
-  }
-  nfit <- as.matrix(as.matrix(cbind2(1, newx)) %*% nbeta) 
-  switch(type, loss=nfit, class=ifelse(nfit > 0, 1, -1))
+  nfit <- predict_path(object, newx, s, lambda = object$nc.lambda)
+  switch(type, loss = nfit, class = ifelse(nfit > 0, 1, -1))
 }

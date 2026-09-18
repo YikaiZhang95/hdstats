@@ -2,33 +2,35 @@
 % Please edit documentation in R/huber-methods.R
 \name{coef.hdhuber}
 \alias{coef.hdhuber}
-\title{Extract Model Coefficients from a `hdhuber` Object}
+\title{Extract Model Coefficients from a \code{hdhuber} Object}
 \usage{
 \method{coef}{hdhuber}(object, s = NULL, type = c("coefficients", "nonzero"), ...)
 }
 \arguments{
-\item{object}{Fitted `hdhuber()` object.}
+\item{object}{Fitted \code{\link{hdhuber}} object.}
 
-\item{s}{Values of the penalty parameter `lambda` for which coefficients are requested.
-Defaults to the entire sequence used during the model fit.}
+\item{s}{Values of the penalty parameter \code{lambda} at which
+coefficients are requested. Default is the entire sequence used during
+the model fit.}
 
-\item{type}{Type of prediction required. Type `"coefficients"` computes the coefficients at the requested 
-values for `s`. Type `"nonzero"` returns a list of the indices of the nonzero coefficients for each 
-value of \code{s}.}
+\item{type}{Type \code{"coefficients"} (the default) returns the
+coefficients at the requested values of \code{s}; type \code{"nonzero"}
+returns a list of the indices of the nonzero coefficients for each value
+of \code{s}.}
 
 \item{...}{Not used.}
 }
 \value{
-Returns a matrix or vector of coefficients corresponding to the specified `lambda` values.
+A matrix of coefficients (intercept in the first row, one column
+  per value of \code{s}), or a list of indices when
+  \code{type = "nonzero"}.
 }
 \description{
-Retrieves the coefficients at specified values of `lambda` from a fitted `hdhuber()` model.
-}
-\details{
-This function extracts coefficients for specified `lambda` values from a `hdhuber()` object.
-If `s`, the vector of `lambda` values, contains values not originally used in the model fitting,
-the `coef` function employs linear interpolation between the closest `lambda` values from the 
-original sequence to estimate coefficients at the new `lambda` values.
+Retrieves the coefficients at specified values of \code{lambda} from a
+fitted \code{\link{hdhuber}} object. If \code{s}, the vector of
+\code{lambda} values, contains values not used in the model fitting,
+linear interpolation between the closest fitted \code{lambda} values is
+used.
 }
 \examples{
 set.seed(315)
@@ -38,9 +40,7 @@ x <- matrix(data = rnorm(n * p, mean = 0, sd = 1), nrow = n, ncol = p)
 beta_star <- c(c(2, 1.5, 0.8, 1, 1.75, 0.75, 0.3), rep(0, (p - 7)))
 eps <- rnorm(n, mean = 0, sd = 1)
 y <- x \%*\% beta_star + eps
-lam2 <- 0
-delta = 0.5
-fit <- hdhuber(x, y, delta = delta, lam2=lam2)
+fit <- hdhuber(x, y, delta = 0.5, lam2 = 0)
 coefs <- coef(fit, s = fit$lambda[3:5])
 }
 \seealso{

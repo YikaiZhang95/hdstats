@@ -1,32 +1,47 @@
 #' Cross-validation for Selecting the Tuning Parameter in the Penalized SVM
 #'
-#' Performs k-fold cross-validation for \code{\link{hdsvm}}.
+#' Performs k-fold cross-validation for \code{\link{hdsvm}}. The held-out
+#' prediction error is measured with the hinge loss.
 #'
-#' @param x A numerical matrix with \eqn{n} rows (observations) and \eqn{p} columns (variables).
-#' @param y Response variable.
-#' @param lambda Optional; a user-supplied sequence of \code{lambda} values. If \code{NULL}, 
-#'   \code{\link{hdsvm}} selects its own sequence.
-#' @param nfolds Number of folds for cross-validation. Defaults to 5.
-#' @param foldid Optional vector specifying the indices of observations in each fold.
-#'   If provided, it overrides \code{nfolds}.
+#' @param x A numerical matrix with \eqn{n} rows (observations) and \eqn{p}
+#'   columns (variables).
+#' @param y Binary response of length \eqn{n}; see \code{\link{hdsvm}}.
+#' @param lambda Optional; a user-supplied sequence of \code{lambda} values.
+#'   If \code{NULL}, \code{\link{hdsvm}} selects its own sequence.
+#' @param nfolds Number of folds for cross-validation. Default is 5.
+#'   The smallest allowed value is 3.
+#' @param foldid Optional vector of values between 1 and \code{nfolds}
+#'   identifying the fold of each observation. If provided, it overrides
+#'   \code{nfolds}.
 #' @param ... Additional arguments passed to \code{\link{hdsvm}}.
 #'
 #' @details
-#' This function computes the average cross-validation error and provides the standard error.
+#' The function first fits \code{\link{hdsvm}} on the full data to obtain
+#' the \code{lambda} sequence, then refits the model \code{nfolds} times,
+#' each time leaving out one fold. The cross-validation error curve is the
+#' average held-out hinge loss over all observations, and its standard error
+#' is computed from the held-out losses.
 #'
 #' @return
-#' An object with S3 class \code{cv.hdsvm} consisting of
-#'   \item{lambda}{Candidate \code{lambda} values.}
-#'   \item{cvm}{Mean cross-validation error.}
-#'   \item{cvsd}{Standard error of the mean cross-validation error.}
-#'   \item{cvup}{Upper confidence curve: \code{cvm} + \code{cvsd}.}
-#'   \item{cvlo}{Lower confidence curve: \code{cvm} - \code{cvsd}.}
-#'   \item{lambda.min}{\code{lambda} achieving the minimum cross-validation error.}
-#'   \item{lambda.1se}{Largest \code{lambda} within one standard error of the minimum error.}
-#'   \item{cv.min}{Cross-validation error at \code{lambda.min}.}
-#'   \item{cv.1se}{Cross-validation error at \code{lambda.1se}.}
+#' An object with S3 class \code{"cv.hdsvm"} consisting of
+#'   \item{lambda}{the \code{lambda} values used in the fits.}
+#'   \item{cvm}{mean cross-validation error, a vector of length
+#'     \code{length(lambda)}.}
+#'   \item{cvsd}{estimated standard error of \code{cvm}.}
+#'   \item{cvupper}{upper curve: \code{cvm + cvsd}.}
+#'   \item{cvlower}{lower curve: \code{cvm - cvsd}.}
+#'   \item{nzero}{number of nonzero coefficients at each \code{lambda}.}
+#'   \item{name}{a text string describing the error measure (for plotting).}
+#'   \item{call}{the call that produced this object.}
 #'   \item{hdsvm.fit}{a fitted \code{\link{hdsvm}} object for the full data.}
-#'   \item{nzero}{Number of non-zero coefficients at each \code{lambda}.}
+#'   \item{lambda.min}{the \code{lambda} achieving the minimum
+#'     cross-validation error.}
+#'   \item{lambda.1se}{the largest \code{lambda} whose cross-validation error
+#'     is within one standard error of the minimum.}
+#'   \item{cvm.min}{cross-validation error at \code{lambda.min}.}
+#'   \item{cvm.1se}{cross-validation error at \code{lambda.1se}.}
+#' @seealso \code{\link{hdsvm}}, \code{\link{coef.cv.hdsvm}},
+#'   \code{\link{predict.cv.hdsvm}}, \code{\link{plot.cv.hdsvm}}
 #' @keywords models classification
 #' @export
 #' @examples
@@ -39,54 +54,50 @@
 #' beta <- 0.1 * rnorm(p)
 #' prob <- plogis(c(x %*% beta))
 #' y <- 2 * rbinom(n, 1, prob) - 1
-#' lam2 <- 0.01
-#' fit <- cv.hdsvm(x, y, lam2=lam2)
-
-cv.hdsvm <- function(x, y, lambda=NULL, nfolds=5L, foldid, ...) {
+#' cv.fit <- cv.hdsvm(x, y, lam2 = 0.01)
+#' cv.fit
+#' plot(cv.fit)
+cv.hdsvm <- function(x, y, lambda = NULL, nfolds = 5L, foldid, ...) {
   ####################################################################
   ## data setup
   y <- drop(y)
   x <- as.matrix(x)
   x.row <- as.integer(NROW(x))
-  if (length(y) != x.row) 
-    stop("x and y have different number of observations.")  
+  if (length(y) != x.row)
+    stop("x and y have different number of observations.")
   ####################################################################
-  if (is.null(lambda)) {
-    hdsvm.object <- hdsvm(x, y, lambda=lambda, ...)
-    lambda <- hdsvm.object$lambda
-  } else {
-    hdsvm.object <- hdsvm(x, y, lambda=lambda, ...)
-  }
-  nz <- sapply(coef(hdsvm.object, type="nonzero"), length) 
-  if (missing(foldid)) 
-    foldid <- sample(rep(seq(nfolds), 
-      length=x.row)) else nfolds = max(foldid)
-  if (nfolds < 3) 
-    stop("nfolds must be bigger than 3; nfolds=5 recommended.")
+  hdsvm.object <- hdsvm(x, y, lambda = lambda, ...)
+  lambda <- hdsvm.object$lambda
+  nz <- sapply(coef(hdsvm.object, type = "nonzero"), length)
+  if (missing(foldid))
+    foldid <- sample(rep(seq(nfolds), length = x.row)) else nfolds <- max(foldid)
+  if (nfolds < 3)
+    stop("nfolds must be at least 3; nfolds = 5 recommended.")
   outlist <- as.list(seq(nfolds))
   ## fit the model nfold times and save them
   for (i in seq(nfolds)) {
     which <- foldid == i
-    outlist[[i]] <- hdsvm(x=x[!which, , drop=FALSE], 
-      y=y[!which], lambda=lambda, ...)
+    outlist[[i]] <- hdsvm(x = x[!which, , drop = FALSE],
+                          y = y[!which], lambda = lambda, ...)
   }
   ## select the lambda according to predmat
-  cvstuff <- cvpath.hdsvm(outlist, x, y, lambda, 
-    foldid, x.row, ...)
-
+  cvstuff <- cvpath.hdsvm(outlist, x, y, lambda, foldid, x.row, ...)
   cvm <- cvstuff$cvm
   cvsd <- cvstuff$cvsd
   cvname <- cvstuff$name
-  out <- list(lambda=lambda, cvm=cvm, cvsd=cvsd, 
-    cvupper=cvm+cvsd, cvlower=cvm - cvsd, nzero=nz,
-    name=cvname, hdsvm.fit=hdsvm.object)
+  out <- list(lambda = lambda, cvm = cvm, cvsd = cvsd,
+              cvupper = cvm + cvsd, cvlower = cvm - cvsd, nzero = nz,
+              name = cvname, hdsvm.fit = hdsvm.object)
   obj <- c(out, as.list(getmin(lambda, cvm, cvsd)))
+  obj$call <- match.call()
   class(obj) <- "cv.hdsvm"
   obj
-} 
+}
 
 cvpath.hdsvm <- function(outlist, x, y, lambda, foldid, x.row, ...) {
   nfolds <- max(foldid)
+  ## the fold models were fitted on the +/-1 coding; use the same coding here
+  y <- c(-1, 1)[as.factor(y)]
   predmat <- matrix(NA, x.row, length(lambda))
   nlams <- double(nfolds)
   for (i in seq(nfolds)) {
@@ -102,8 +113,7 @@ cvpath.hdsvm <- function(outlist, x, y, lambda, foldid, x.row, ...) {
   cvm <- colMeans(cvraw, na.rm = TRUE)
   scaled <- scale(cvraw, cvm, FALSE)^2
   cvsd <- sqrt(colMeans(scaled, na.rm = TRUE) / (N - 1))
-  out <- list(cvm=cvm, cvsd=cvsd, cvraw=cvraw)
-  out
+  list(cvm = cvm, cvsd = cvsd, cvraw = cvraw, name = "Hinge loss")
 }
 
 svm_loss <- function(tval) pmax(1 - tval, 0)

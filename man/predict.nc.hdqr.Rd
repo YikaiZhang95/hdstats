@@ -7,25 +7,24 @@
 \method{predict}{nc.hdqr}(object, newx, s = NULL, ...)
 }
 \arguments{
-\item{object}{Fitted \code{nc.hdqr} object from which predictions are to be derived.}
+\item{object}{Fitted \code{\link{nc.hdqr}} object.}
 
-\item{newx}{Matrix of new predictor values for which predictions are desired.
-This must be a matrix and is a required argument.}
+\item{newx}{Matrix of new predictor values at which predictions are to be
+made. This is a required argument.}
 
-\item{s}{Values of the penalty parameter \code{lambda} for which predictions are requested.
-Defaults to the entire sequence used during the model fit.}
+\item{s}{Values of the penalty parameter \code{lambda} at which
+predictions are requested. Default is the entire sequence used during
+the model fit.}
 
 \item{...}{Not used.}
 }
 \value{
-Returns a vector or matrix of predicted values corresponding to the specified \code{lambda} values.
+A matrix of predicted values, one row per row of \code{newx} and
+  one column per value of \code{s}.
 }
 \description{
-Produces fitted values for new predictor data using a fitted \code{nc.hdqr} object.
-}
-\details{
-This function generates predictions at specified \code{lambda} values from a fitted \code{nc.hdqr} object.
-It is essential to provide a new matrix of predictor values (\code{newx}) at which these predictions are to be made.
+Produces fitted values for new predictor data using a fitted
+\code{\link{nc.hdqr}} object at specified \code{lambda} values.
 }
 \examples{
 set.seed(315)
@@ -35,10 +34,9 @@ x <- matrix(data = rnorm(n * p, mean = 0, sd = 1), nrow = n, ncol = p)
 beta_star <- c(c(2, 1.5, 0.8, 1, 1.75, 0.75, 0.3), rep(0, (p - 7)))
 eps <- rnorm(n, mean = 0, sd = 1)
 y <- x \%*\% beta_star + eps
-tau <- 0.5
-lam2 <- 0.01
-lambda <- 10^(seq(1,-4, length.out=30))
-nc.fit <- nc.hdqr(x=x, y=y, tau=tau, lambda=lambda, lam2=lam2, pen="scad")
+lambda <- 10^(seq(1, -4, length.out = 30))
+nc.fit <- nc.hdqr(x = x, y = y, tau = 0.5, lambda = lambda, lam2 = 0.01,
+                  pen = "scad")
 nc.preds <- predict(nc.fit, newx = tail(x), s = nc.fit$lambda[3:5])
 }
 \seealso{

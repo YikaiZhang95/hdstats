@@ -2,33 +2,35 @@
 % Please edit documentation in R/hdsvm-methods.R
 \name{predict.hdsvm}
 \alias{predict.hdsvm}
-\title{Make Predictions from a `hdsvm` Object}
+\title{Make Predictions from a \code{hdsvm} Object}
 \usage{
 \method{predict}{hdsvm}(object, newx, s = NULL, type = c("class", "loss"), ...)
 }
 \arguments{
-\item{object}{Fitted `hdsvm()` object from which predictions are to be derived.}
+\item{object}{Fitted \code{\link{hdsvm}} object.}
 
-\item{newx}{Matrix of new predictor values for which predictions are desired.
-This must be a matrix and is a required argument.}
+\item{newx}{Matrix of new predictor values at which predictions are to be
+made. This is a required argument.}
 
-\item{s}{Values of the penalty parameter `lambda` for which predictions are requested.
-Defaults to the entire sequence used during the model fit.}
+\item{s}{Values of the penalty parameter \code{lambda} at which
+predictions are requested. Default is the entire sequence used during
+the model fit.}
 
-\item{type}{Type of prediction required. Type `"class"` produces the predicted binary class labels and
-type `"loss"` returns the fitted values. Default is \code{"class"}.}
+\item{type}{Type \code{"class"} (the default) returns the predicted class
+labels, coded as \eqn{-1} (first level of \code{y}) and \eqn{+1}
+(second level); type \code{"loss"} returns the linear predictor
+\eqn{b_0 + x^\top\beta}.}
 
 \item{...}{Not used.}
 }
 \value{
-Returns a vector or matrix of predicted values corresponding to the specified `lambda` values.
+A matrix of predicted values, one row per row of \code{newx} and
+  one column per value of \code{s}.
 }
 \description{
-Produces fitted values for new predictor data using a fitted `hdsvm()` object.
-}
-\details{
-This function generates predictions at specified `lambda` values from a fitted `hdsvm()` object.
-It is essential to provide a new matrix of predictor values (`newx`) at which these predictions are to be made.
+Produces class labels or the linear predictor for new predictor data
+using a fitted \code{\link{hdsvm}} object at specified \code{lambda}
+values.
 }
 \examples{
 set.seed(315)
@@ -40,8 +42,7 @@ x <- rbind(x1, x2)
 beta <- 0.1 * rnorm(p)
 prob <- plogis(c(x \%*\% beta))
 y <- 2 * rbinom(n, 1, prob) - 1
-lam2 <- 0.01
-fit <- hdsvm(x, y, lam2=lam2)
+fit <- hdsvm(x, y, lam2 = 0.01)
 preds <- predict(fit, newx = tail(x), s = fit$lambda[3:5])
 }
 \seealso{

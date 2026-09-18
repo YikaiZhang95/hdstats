@@ -2,30 +2,29 @@
 % Please edit documentation in R/huber-methods.R
 \name{predict.hdhuber}
 \alias{predict.hdhuber}
-\title{Make Predictions from a `hdhuber` Object}
+\title{Make Predictions from a \code{hdhuber} Object}
 \usage{
 \method{predict}{hdhuber}(object, newx, s = NULL, ...)
 }
 \arguments{
-\item{object}{Fitted `hdhuber()` object from which predictions are to be derived.}
+\item{object}{Fitted \code{\link{hdhuber}} object.}
 
-\item{newx}{Matrix of new predictor values for which predictions are desired.
-This must be a matrix and is a required argument.}
+\item{newx}{Matrix of new predictor values at which predictions are to be
+made. This is a required argument.}
 
-\item{s}{Values of the penalty parameter `lambda` for which predictions are requested.
-Defaults to the entire sequence used during the model fit.}
+\item{s}{Values of the penalty parameter \code{lambda} at which
+predictions are requested. Default is the entire sequence used during
+the model fit.}
 
 \item{...}{Not used.}
 }
 \value{
-Returns a vector or matrix of predicted values corresponding to the specified `lambda` values.
+A matrix of predicted values, one row per row of \code{newx} and
+  one column per value of \code{s}.
 }
 \description{
-Produces fitted values for new predictor data using a fitted `hdhuber()` object.
-}
-\details{
-This function generates predictions at specified `lambda` values from a fitted `hdhuber()` object.
-It is essential to provide a new matrix of predictor values (`newx`) at which these predictions are to be made.
+Produces fitted values for new predictor data using a fitted
+\code{\link{hdhuber}} object at specified \code{lambda} values.
 }
 \examples{
 set.seed(315)
@@ -35,9 +34,7 @@ x <- matrix(data = rnorm(n * p, mean = 0, sd = 1), nrow = n, ncol = p)
 beta_star <- c(c(2, 1.5, 0.8, 1, 1.75, 0.75, 0.3), rep(0, (p - 7)))
 eps <- rnorm(n, mean = 0, sd = 1)
 y <- x \%*\% beta_star + eps
-delta = 0.5
-lam2 <- 0.01
-fit <- hdhuber(x = x, y = y, delta = delta, lam2 = lam2)
+fit <- hdhuber(x = x, y = y, delta = 0.5, lam2 = 0.01)
 preds <- predict(fit, newx = tail(x), s = fit$lambda[3:5])
 }
 \seealso{

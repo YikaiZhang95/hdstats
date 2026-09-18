@@ -20,13 +20,13 @@ Default is \code{0.01}.}
 }
 \value{
 An object of class \code{c("hdrr", "hdqr")}. Because it carries the
-standard \code{b0}/\code{beta}/\code{lambda} fields, the \code{\link{coef.hdqr}}
-and \code{\link{predict.hdqr}} methods apply directly. Components:
-\item{b0}{Intercept sequence (recovered as \code{median(y - x \%*\% beta)}).}
-\item{beta}{A \eqn{p \times} \code{length(lambda)} sparse matrix of slopes.}
-\item{lambda}{The \code{lambda} sequence used.}
-\item{df}{Number of nonzero coefficients at each \code{lambda}.}
-\item{qrfit}{The underlying \code{hdqr} fit on the differenced data.}
+  standard \code{b0}/\code{beta}/\code{lambda} fields, the \code{\link{coef.hdqr}}
+  and \code{\link{predict.hdqr}} methods apply directly. Components:
+  \item{b0}{Intercept sequence (recovered as \code{median(y - x \%*\% beta)}).}
+  \item{beta}{A \eqn{p \times} \code{length(lambda)} sparse matrix of slopes.}
+  \item{lambda}{The \code{lambda} sequence used.}
+  \item{df}{Number of nonzero coefficients at each \code{lambda}.}
+  \item{qrfit}{The underlying \code{hdqr} fit on the differenced data.}
 }
 \description{
 Fits high-dimensional penalized canonical (Wilcoxon) rank regression by
@@ -57,6 +57,18 @@ y <- x[, 1] * 2 - x[, 2] * 1.5 + rnorm(n)
 fit <- hdrr(x, y, lam2 = 0.01)
 coef(fit, s = fit$lambda[5])
 }
-\seealso{
-\code{\link{hdqr}}, \code{\link{coef.hdqr}}, \code{\link{predict.hdqr}}
+\references{
+Jaeckel, L. A. (1972). Estimating regression coefficients by minimizing the
+dispersion of the residuals. \emph{The Annals of Mathematical Statistics},
+43(5), 1449--1458. \doi{10.1214/aoms/1177692377}
+
+Hettmansperger, T. P. and McKean, J. W. (2011). \emph{Robust Nonparametric
+Statistical Methods}, 2nd edition. Chapman and Hall/CRC.
 }
+\seealso{
+\code{\link{cv.hdrr}}, \code{\link{hdqr}}, \code{\link{coef.hdqr}},
+  \code{\link{predict.hdqr}}
+}
+\keyword{models}
+\keyword{regression}
+\keyword{robust}

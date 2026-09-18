@@ -7,39 +7,54 @@
 cv.nc.hdsvm(x, y, lambda = NULL, nfolds = 5L, foldid, ...)
 }
 \arguments{
-\item{x}{A numerical matrix with dimensions (\eqn{n} rows and \eqn{p} columns), where each row represents an observation.}
+\item{x}{A numerical matrix with \eqn{n} rows (observations) and \eqn{p}
+columns (variables).}
 
-\item{y}{Response variable.}
+\item{y}{Binary response of length \eqn{n}; see \code{\link{hdsvm}}.}
 
-\item{lambda}{Optional user-supplied sequence of \code{lambda} values.}
+\item{lambda}{Optional user-supplied sequence of \code{lambda} values
+for the nonconvex penalty; see \code{\link{nc.hdsvm}}.}
 
-\item{nfolds}{Number of folds in the cross-validation, default is 5.}
+\item{nfolds}{Number of folds for cross-validation. Default is 5.
+The smallest allowed value is 3.}
 
-\item{foldid}{An optional vector that assigns each observation to a specific fold. 
-If provided, this parameter overrides \code{nfolds}.}
+\item{foldid}{Optional vector of values between 1 and \code{nfolds}
+identifying the fold of each observation. If provided, it overrides
+\code{nfolds}.}
 
-\item{...}{Additional arguments passed to \code{\link{nc.hdsvm}}.}
+\item{...}{Additional arguments passed to \code{\link{nc.hdsvm}}
+(e.g. \code{pen}, \code{aval}, \code{lam2}, \code{lla_step}).}
 }
 \value{
-An object of class \code{cv.nc.hdsvm} is returned,
-which is a list with the ingredients of the cross-validated fit.
- \item{lambda}{the values of \code{lambda} used in the fits.}
- \item{cvm}{the mean cross-validated error - a vector of length \code{length(lambda)}.}
- \item{cvsd}{estimate of standard error of \code{cvm}.}
- \item{cvupper}{upper curve = \code{cvm+cvsd}.}
- \item{cvlower}{lower curve = \code{cvm-cvsd}.}
- \item{nzero}{number of non-zero coefficients at each \code{lambda}.}
- \item{name}{a text string indicating type of measure (for plotting purposes).}
- \item{nchdsvm.fit}{a fitted \code{\link{nc.hdsvm}} object for the full data.}
- \item{lambda.min}{The optimal value of \code{lambda} that gives minimum cross validation error \code{cvm}.}
- \item{lambda.1se}{The largest value of \code{lambda} such that error is within 1 standard error of the minimum.}
+An object with S3 class \code{"cv.nc.hdsvm"} consisting of
+  \item{lambda}{the \code{lambda} values used in the fits.}
+  \item{cvm}{mean cross-validation error, a vector of length
+    \code{length(lambda)}.}
+  \item{cvsd}{estimated standard error of \code{cvm}.}
+  \item{cvupper}{upper curve: \code{cvm + cvsd}.}
+  \item{cvlower}{lower curve: \code{cvm - cvsd}.}
+  \item{nzero}{number of nonzero coefficients at each \code{lambda}.}
+  \item{name}{a text string describing the error measure (for plotting).}
+  \item{call}{the call that produced this object.}
+  \item{nchdsvm.fit}{a fitted \code{\link{nc.hdsvm}} object for the full
+    data.}
+  \item{lambda.min}{the \code{lambda} achieving the minimum
+    cross-validation error.}
+  \item{lambda.1se}{the largest \code{lambda} whose cross-validation error
+    is within one standard error of the minimum.}
+  \item{cvm.min}{cross-validation error at \code{lambda.min}.}
+  \item{cvm.1se}{cross-validation error at \code{lambda.1se}.}
 }
 \description{
-Conducts k-fold cross-validation for the \code{nc.hdsvm} function.
+Performs k-fold cross-validation for \code{\link{nc.hdsvm}}. The held-out
+prediction error is measured with the hinge loss.
 }
 \details{
-This function estimates the average cross-validation error and its standard error across folds. It is primarily used to 
-identify the optimal \code{lambda} value for fitting nonconvex penalized SVM models.
+The function first fits \code{\link{nc.hdsvm}} on the full data, then
+refits the model \code{nfolds} times, each time leaving out one fold.
+The cross-validation error curve is the average held-out hinge loss over
+all observations, and its standard error is computed from the held-out
+losses.
 }
 \examples{
 set.seed(315)
@@ -51,9 +66,16 @@ x <- rbind(x1, x2)
 beta <- 0.1 * rnorm(p)
 prob <- plogis(c(x \%*\% beta))
 y <- 2 * rbinom(n, 1, prob) - 1
-lam2 <- 0.01
-lambda <- 10^(seq(1,-4, length.out=30))
-\donttest{cv.nc.fit <- cv.nc.hdsvm(x=x, y=y, lambda=lambda, lam2=lam2, pen="scad")}
+lambda <- 10^(seq(1, -4, length.out = 10))
+\donttest{
+cv.nc.fit <- cv.nc.hdsvm(x = x, y = y, lambda = lambda, lam2 = 0.01,
+                         pen = "scad")
+cv.nc.fit
+}
+}
+\seealso{
+\code{\link{nc.hdsvm}}, \code{\link{coef.cv.nc.hdsvm}},
+  \code{\link{predict.cv.nc.hdsvm}}, \code{\link{plot.cv.nc.hdsvm}}
 }
 \keyword{classification}
-\keyword{svm}
+\keyword{models}

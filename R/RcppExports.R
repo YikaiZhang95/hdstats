@@ -5,16 +5,8 @@ hdsvm_cd_cpp <- function(alpha, lam2, hval, nobs, nvars, X, y, jd, pfncol, pf, p
     .Call(`_hdstats_hdsvm_cd_cpp`, alpha, lam2, hval, nobs, nvars, X, y, jd, pfncol, pf, pf2, dfmax, pmax, nlam, flmin, ulam, eps, isd, maxit, sigma, is_exact)
 }
 
-huber_path_cpp <- function(alpha, lam2, hval, maj, mval, X, y, ju, pfncol, pf, pf2, dfmax, pmax, nlam, flmin, ulam, eps, maxit, istrong) {
-    .Call(`_hdstats_huber_path_cpp`, alpha, lam2, hval, maj, mval, X, y, ju, pfncol, pf, pf2, dfmax, pmax, nlam, flmin, ulam, eps, maxit, istrong)
-}
-
 huber_cd_cpp <- function(alpha, lam2, hval, nobs, nvars, X, y, jd, pfncol, pf, pf2, dfmax, pmax, nlam, flmin, ulam, eps, isd, maxit, istrong) {
     .Call(`_hdstats_huber_cd_cpp`, alpha, lam2, hval, nobs, nvars, X, y, jd, pfncol, pf, pf2, dfmax, pmax, nlam, flmin, ulam, eps, isd, maxit, istrong)
-}
-
-huber_drv_cpp <- function(X, r, hval) {
-    .Call(`_hdstats_huber_drv_cpp`, X, r, hval)
 }
 
 lqr_hd_cpp <- function(alpha, lam2, hval, nobs, nvars, X, y, tau, jd, pfncol, pf, pf2, dfmax, pmax, nlam, flmin, ulam, eps, isd, maxit, sigma, is_exact) {

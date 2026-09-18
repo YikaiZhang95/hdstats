@@ -2,33 +2,35 @@
 % Please edit documentation in R/nc.hdsvm-methods.R
 \name{coef.nc.hdsvm}
 \alias{coef.nc.hdsvm}
-\title{Extract Model Coefficients from a `nc.hdsvm` Object}
+\title{Extract Model Coefficients from a \code{nc.hdsvm} Object}
 \usage{
 \method{coef}{nc.hdsvm}(object, s = NULL, type = c("coefficients", "nonzero"), ...)
 }
 \arguments{
-\item{object}{Fitted `nc.hdsvm()` object.}
+\item{object}{Fitted \code{\link{nc.hdsvm}} object.}
 
-\item{s}{Values of the penalty parameter `lambda` for which coefficients are requested.
-Defaults to the entire sequence used during the model fit.}
+\item{s}{Values of the penalty parameter \code{lambda} at which
+coefficients are requested. Default is the entire sequence used during
+the model fit.}
 
-\item{type}{Type of prediction required. Type `"coefficients"` computes the coefficients at the requested 
-values for `s`. Type `"nonzero"` returns a list of the indices of the nonzero coefficients for each 
-value of \code{s}.}
+\item{type}{Type \code{"coefficients"} (the default) returns the
+coefficients at the requested values of \code{s}; type \code{"nonzero"}
+returns a list of the indices of the nonzero coefficients for each value
+of \code{s}.}
 
 \item{...}{Not used.}
 }
 \value{
-Returns a matrix or vector of coefficients corresponding to the specified `lambda` values.
+A matrix of coefficients (intercept in the first row, one column
+  per value of \code{s}), or a list of indices when
+  \code{type = "nonzero"}.
 }
 \description{
-Retrieves the coefficients at specified values of `lambda` from a fitted `nc.hdsvm()` model.
-}
-\details{
-This function extracts coefficients for specified `lambda` values from a `nc.hdsvm()` object.
-If `s`, the vector of `lambda` values, contains values not originally used in the model fitting,
-the `coef` function employs linear interpolation between the closest `lambda` values from the 
-original sequence to estimate coefficients at the new `lambda` values.
+Retrieves the coefficients at specified values of \code{lambda} from a
+fitted \code{\link{nc.hdsvm}} object. If \code{s}, the vector of
+\code{lambda} values, contains values not used in the model fitting,
+linear interpolation between the closest fitted \code{lambda} values is
+used.
 }
 \examples{
 set.seed(315)
@@ -40,10 +42,11 @@ x <- rbind(x1, x2)
 beta <- 0.1 * rnorm(p)
 prob <- plogis(c(x \%*\% beta))
 y <- 2 * rbinom(n, 1, prob) - 1
-lam2 <- 0.01
-lambda <- 10^(seq(1,-4, length.out = 30)) 
-\donttest{nc.fit <- nc.hdsvm(x = x, y = y, lambda = lambda, lam2 = lam2, pen = "scad")}
-\donttest{nc.coefs <- coef(nc.fit, s = nc.fit$lambda[3:5])}
+lambda <- 10^(seq(1, -4, length.out = 30))
+\donttest{
+nc.fit <- nc.hdsvm(x = x, y = y, lambda = lambda, lam2 = 0.01, pen = "scad")
+nc.coefs <- coef(nc.fit, s = nc.fit$lambda[3:5])
+}
 }
 \seealso{
 \code{\link{nc.hdsvm}}, \code{\link{predict.nc.hdsvm}}

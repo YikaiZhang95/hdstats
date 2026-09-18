@@ -7,28 +7,30 @@
 \method{coef}{hdqr}(object, s = NULL, type = c("coefficients", "nonzero"), ...)
 }
 \arguments{
-\item{object}{Fitted \code{hdqr} object.}
+\item{object}{Fitted \code{\link{hdqr}} or \code{\link{hdrr}} object.}
 
-\item{s}{Values of the penalty parameter \code{lambda} for which coefficients are requested.
-Defaults to the entire sequence used during the model fit.}
+\item{s}{Values of the penalty parameter \code{lambda} at which
+coefficients are requested. Default is the entire sequence used during
+the model fit.}
 
-\item{type}{Type of prediction required. Type "coefficients" computes the coefficients at the requested 
-values for \code{s}. Type "nonzero" returns a list of the indices of the nonzero coefficients for each 
-value of \code{s}.}
+\item{type}{Type \code{"coefficients"} (the default) returns the
+coefficients at the requested values of \code{s}; type \code{"nonzero"}
+returns a list of the indices of the nonzero coefficients for each value
+of \code{s}.}
 
 \item{...}{Not used.}
 }
 \value{
-Returns a matrix or vector of coefficients corresponding to the specified \code{lambda} values.
+A matrix of coefficients (intercept in the first row, one column
+  per value of \code{s}), or a list of indices when
+  \code{type = "nonzero"}.
 }
 \description{
-Retrieves the coefficients at specified values of \code{lambda} from a fitted \code{hdqr} model.
-}
-\details{
-This function extracts coefficients for specified \code{lambda} values from a \code{hdqr} object.
-If \code{s}, the vector of \code{lambda} values, contains values not originally used in the model fitting,
-the \code{coef} function employs linear interpolation between the closest \code{lambda} values from the 
-original sequence to estimate coefficients at the new \code{lambda} values.
+Retrieves the coefficients at specified values of \code{lambda} from a
+fitted \code{\link{hdqr}} (or \code{\link{hdrr}}) object. If \code{s},
+the vector of \code{lambda} values, contains values not used in the model
+fitting, linear interpolation between the closest fitted \code{lambda}
+values is used.
 }
 \examples{
 set.seed(315)
@@ -38,9 +40,7 @@ x <- matrix(data = rnorm(n * p, mean = 0, sd = 1), nrow = n, ncol = p)
 beta_star <- c(c(2, 1.5, 0.8, 1, 1.75, 0.75, 0.3), rep(0, (p - 7)))
 eps <- rnorm(n, mean = 0, sd = 1)
 y <- x \%*\% beta_star + eps
-tau <- 0.5
-lam2 <- 0.01
-fit <- hdqr(x = x, y = y, tau = tau, lam2 = lam2)
+fit <- hdqr(x = x, y = y, tau = 0.5, lam2 = 0.01)
 coefs <- coef(fit, s = fit$lambda[3:5])
 }
 \seealso{

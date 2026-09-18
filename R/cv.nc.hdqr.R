@@ -1,35 +1,52 @@
 #' Cross-validation for Selecting the Tuning Parameter of Nonconvex Penalized Quantile Regression
 #'
-#' Conducts k-fold cross-validation for the \code{nc.hdqr} function.
+#' Performs k-fold cross-validation for \code{\link{nc.hdqr}}. The held-out
+#' prediction error is measured with the check loss at the quantile level
+#' \code{tau}.
 #'
-#' @param x A numerical matrix with dimensions (\eqn{n} rows and \eqn{p} columns), where each row represents an observation.
-#' @param y Response variable.
-#' @param lambda Optional user-supplied sequence of \code{lambda} values.
-#' @param nfolds Number of folds in the cross-validation, default is 5.
-#' @param foldid An optional vector that assigns each observation to a specific fold. 
-#'   If provided, this parameter overrides \code{nfolds}.
-#' @param tau The quantile level (\code{tau}) used in the error calculation. Default value is typically 0.5 unless specified.
-#' @param ... Additional arguments passed to \code{\link{nc.hdqr}}.
+#' @param x A numerical matrix with \eqn{n} rows (observations) and \eqn{p}
+#'   columns (variables).
+#' @param y Numeric response vector of length \eqn{n}.
+#' @param lambda Optional user-supplied sequence of \code{lambda} values
+#'   for the nonconvex penalty; see \code{\link{nc.hdqr}}.
+#' @param tau The quantile level used in the loss function. Default is 0.5.
+#' @param nfolds Number of folds for cross-validation. Default is 5.
+#'   The smallest allowed value is 3.
+#' @param foldid Optional vector of values between 1 and \code{nfolds}
+#'   identifying the fold of each observation. If provided, it overrides
+#'   \code{nfolds}.
+#' @param ... Additional arguments passed to \code{\link{nc.hdqr}}
+#'   (e.g. \code{pen}, \code{aval}, \code{lam2}, \code{lla_step}).
 #'
 #' @details
-#' This function estimates the average cross-validation error and its standard error across folds. It is primarily used to 
-#' identify the optimal \code{lambda} value for fitting nonconvex penalized quantile regression models.
+#' The function first fits \code{\link{nc.hdqr}} on the full data, then
+#' refits the model \code{nfolds} times, each time leaving out one fold.
+#' The cross-validation error curve is the average held-out check loss over
+#' all observations, and its standard error is computed from the held-out
+#' losses.
 #'
 #' @return
-#' An object of class \code{cv.nc.hdqr} is returned,
-#' which is a list with the ingredients of the cross-validated fit.
-#'  \item{lambda}{the values of \code{lambda} used in the fits.}
-#'  \item{cvm}{the mean cross-validated error - a vector of length \code{length(lambda)}.}
-#'  \item{cvsd}{estimate of standard error of \code{cvm}.}
-#'  \item{cvupper}{upper curve = \code{cvm+cvsd}.}
-#'  \item{cvlower}{lower curve = \code{cvm-cvsd}.}
-#'  \item{nzero}{number of non-zero coefficients at each \code{lambda}.}
-#'  \item{name}{a text string indicating type of measure (for plotting purposes).}
-#'  \item{nchdqr.fit}{a fitted \code{\link{nc.hdqr}} object for the full data.}
-#'  \item{lambda.min}{The optimal value of \code{lambda} that gives minimum cross validation error \code{cvm}.}
-#'  \item{lambda.1se}{The largest value of \code{lambda} such that error is within 1 standard error of the minimum.}
-#'
-#' @keywords quantile regression
+#' An object with S3 class \code{"cv.nc.hdqr"} consisting of
+#'   \item{lambda}{the \code{lambda} values used in the fits.}
+#'   \item{cvm}{mean cross-validation error, a vector of length
+#'     \code{length(lambda)}.}
+#'   \item{cvsd}{estimated standard error of \code{cvm}.}
+#'   \item{cvupper}{upper curve: \code{cvm + cvsd}.}
+#'   \item{cvlower}{lower curve: \code{cvm - cvsd}.}
+#'   \item{nzero}{number of nonzero coefficients at each \code{lambda}.}
+#'   \item{name}{a text string describing the error measure (for plotting).}
+#'   \item{call}{the call that produced this object.}
+#'   \item{nchdqr.fit}{a fitted \code{\link{nc.hdqr}} object for the full
+#'     data.}
+#'   \item{lambda.min}{the \code{lambda} achieving the minimum
+#'     cross-validation error.}
+#'   \item{lambda.1se}{the largest \code{lambda} whose cross-validation error
+#'     is within one standard error of the minimum.}
+#'   \item{cvm.min}{cross-validation error at \code{lambda.min}.}
+#'   \item{cvm.1se}{cross-validation error at \code{lambda.1se}.}
+#' @seealso \code{\link{nc.hdqr}}, \code{\link{coef.cv.nc.hdqr}},
+#'   \code{\link{predict.cv.nc.hdqr}}, \code{\link{plot.cv.nc.hdqr}}
+#' @keywords models regression
 #' @export
 #' @examples
 #' set.seed(315)
@@ -39,46 +56,45 @@
 #' beta_star <- c(c(2, 1.5, 0.8, 1, 1.75, 0.75, 0.3), rep(0, (p - 7)))
 #' eps <- rnorm(n, mean = 0, sd = 1)
 #' y <- x %*% beta_star + eps
-#' tau <- 0.5
-#' lam2 <- 0.01
-#' lambda <- 10^(seq(1,-4, length.out=10))
-#' \donttest{cv.nc.fit <- cv.nc.hdqr(y=y, x=x, tau=tau, lambda=lambda, lam2=lam2, pen="scad")}
-
-cv.nc.hdqr <- function(x, y, lambda=NULL, tau, nfolds=5L, foldid, ...) {
+#' lambda <- 10^(seq(1, -4, length.out = 10))
+#' \donttest{
+#' cv.nc.fit <- cv.nc.hdqr(x = x, y = y, tau = 0.5, lambda = lambda,
+#'                         lam2 = 0.01, pen = "scad")
+#' cv.nc.fit
+#' }
+cv.nc.hdqr <- function(x, y, lambda = NULL, tau = 0.5, nfolds = 5L, foldid, ...) {
   ####################################################################
   ## data setup
-  y = drop(y)
-  x = as.matrix(x)
-  x.row = as.integer(NROW(x))
-  if (length(y) != x.row) 
-    stop("x and y have different number of observations.")  
+  y <- drop(y)
+  x <- as.matrix(x)
+  x.row <- as.integer(NROW(x))
+  if (length(y) != x.row)
+    stop("x and y have different number of observations.")
   ####################################################################
-  nc.hdqr.object = nc.hdqr(x, y, lambda=lambda, tau=tau, ...)
-  lambda = nc.hdqr.object$nc.lambda
-  nz = sapply(coef(nc.hdqr.object, type="nonzero"), length) 
-  if (missing(foldid)) 
-    foldid = sample(rep(seq(nfolds), 
-      length=x.row)) else nfolds = max(foldid)
-  if (nfolds < 3) 
-    stop("nfolds must be bigger than 3; nfolds=5 recommended.")
-  outlist = as.list(seq(nfolds))
+  nc.hdqr.object <- nc.hdqr(x, y, lambda = lambda, tau = tau, ...)
+  lambda <- nc.hdqr.object$nc.lambda
+  nz <- sapply(coef(nc.hdqr.object, type = "nonzero"), length)
+  if (missing(foldid))
+    foldid <- sample(rep(seq(nfolds), length = x.row)) else nfolds <- max(foldid)
+  if (nfolds < 3)
+    stop("nfolds must be at least 3; nfolds = 5 recommended.")
+  outlist <- as.list(seq(nfolds))
   ## fit the model nfold times and save them
   for (i in seq(nfolds)) {
-    which = foldid == i
-    outlist[[i]] = nc.hdqr(x=x[!which, , drop=FALSE], 
-      y=y[!which], tau=tau, lambda=lambda, ...)
+    which <- foldid == i
+    outlist[[i]] <- nc.hdqr(x = x[!which, , drop = FALSE],
+                            y = y[!which], tau = tau, lambda = lambda, ...)
   }
   ## select the lambda according to predmat
-  cvstuff <- cvpath.hdqr(outlist, x, y, tau, lambda, 
-    foldid, x.row, ...)
-
-  cvm = cvstuff$cvm
-  cvsd = cvstuff$cvsd
-  cvname = cvstuff$name
-  out = list(lambda=lambda, cvm=cvm, cvsd=cvsd, 
-    cvupper=cvm+cvsd, cvlower=cvm - cvsd, nzero=nz,
-    name=cvname, nchdqr.fit=nc.hdqr.object)
-  obj = c(out, as.list(getmin(lambda, cvm, cvsd)))
-  class(obj) = "cv.nc.hdqr"
+  cvstuff <- cvpath.hdqr(outlist, x, y, tau, lambda, foldid, x.row, ...)
+  cvm <- cvstuff$cvm
+  cvsd <- cvstuff$cvsd
+  cvname <- cvstuff$name
+  out <- list(lambda = lambda, cvm = cvm, cvsd = cvsd,
+              cvupper = cvm + cvsd, cvlower = cvm - cvsd, nzero = nz,
+              name = cvname, nchdqr.fit = nc.hdqr.object)
+  obj <- c(out, as.list(getmin(lambda, cvm, cvsd)))
+  obj$call <- match.call()
+  class(obj) <- "cv.nc.hdqr"
   obj
-} 
+}

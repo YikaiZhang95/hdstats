@@ -2,28 +2,30 @@
 % Please edit documentation in R/cv.nc.hdsvm-methods.R
 \name{coef.cv.nc.hdsvm}
 \alias{coef.cv.nc.hdsvm}
-\title{Extract Coefficients from a `cv.nc.hdsvm` Object}
+\title{Extract Coefficients from a \code{cv.nc.hdsvm} Object}
 \usage{
 \method{coef}{cv.nc.hdsvm}(object, s = c("lambda.1se", "lambda.min"), ...)
 }
 \arguments{
-\item{object}{A fitted `cv.nc.hdsvm()` object from which coefficients are to be extracted.}
+\item{object}{A fitted \code{\link{cv.nc.hdsvm}} object.}
 
-\item{s}{Specifies the `lambda` values at which coefficients are requested.
-The default is `s = "lambda.1se"`, representing the largest `lambda` such that the cross-validation
-error estimate is within one standard error of the minimum. Alternatively, `s = "lambda.min"`
-corresponds to the `lambda` yielding the minimum cross-validation error. If `s` is numeric, these
-values are directly used as the `lambda` values for coefficient extraction.}
+\item{s}{Value(s) of the penalty parameter \code{lambda} at which
+coefficients are desired. The default is \code{s = "lambda.1se"}, the
+largest value of \code{lambda} such that the cross-validation error is
+within one standard error of the minimum. Alternatively,
+\code{s = "lambda.min"} gives the value minimizing the cross-validation
+error. If \code{s} is numeric, these are taken as the actual values of
+\code{lambda} to use.}
 
 \item{...}{Not used.}
 }
 \value{
-Returns a vector or matrix of coefficients corresponding to the specified `lambda` values.
+A matrix of coefficients at the specified \code{lambda} values.
 }
 \description{
-Retrieves coefficients at specified values of `lambda` from a fitted `cv.nc.hdsvm()` model.
-Utilizes the stored `"nchdsvm.fit"` object and the optimal `lambda` values determined during
-the cross-validation process.
+Retrieves coefficients from a cross-validated \code{\link{nc.hdsvm}}
+model, using the stored full-data fit and the value of \code{lambda}
+selected by cross-validation.
 }
 \examples{
 set.seed(315)
@@ -35,10 +37,12 @@ x <- rbind(x1, x2)
 beta <- 0.1 * rnorm(p)
 prob <- plogis(c(x \%*\% beta))
 y <- 2 * rbinom(n, 1, prob) - 1
-lam2 <- 0.01
-lambda <- 10^(seq(1,-4, length.out = 30))
-\donttest{cv.nc.fit <- cv.nc.hdsvm(x = x, y = y, lambda = lambda, lam2 = lam2, pen = "scad")}
-\donttest{coef(cv.nc.fit, s = c(0.02, 0.03))}
+lambda <- 10^(seq(1, -4, length.out = 10))
+\donttest{
+cv.nc.fit <- cv.nc.hdsvm(x = x, y = y, lambda = lambda, lam2 = 0.01,
+                         pen = "scad")
+coef(cv.nc.fit, s = c(0.02, 0.03))
+}
 }
 \seealso{
 \code{\link{cv.nc.hdsvm}}, \code{\link{predict.cv.nc.hdsvm}}

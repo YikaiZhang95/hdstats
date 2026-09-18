@@ -4,44 +4,58 @@
 \alias{cv.hdqr}
 \title{Cross-validation for Selecting the Tuning Parameter in Penalized Quantile Regression}
 \usage{
-cv.hdqr(x, y, lambda = NULL, tau, nfolds = 5L, foldid, ...)
+cv.hdqr(x, y, lambda = NULL, tau = 0.5, nfolds = 5L, foldid, ...)
 }
 \arguments{
-\item{x}{A numerical matrix with \eqn{n} rows (observations) and \eqn{p} columns (variables).}
+\item{x}{A numerical matrix with \eqn{n} rows (observations) and \eqn{p}
+columns (variables).}
 
-\item{y}{Response variable.}
+\item{y}{Numeric response vector of length \eqn{n}.}
 
-\item{lambda}{Optional; a user-supplied sequence of \code{lambda} values. If \code{NULL}, 
-\code{\link{hdqr}} selects its own sequence.}
+\item{lambda}{Optional; a user-supplied sequence of \code{lambda} values.
+If \code{NULL}, \code{\link{hdqr}} selects its own sequence.}
 
-\item{tau}{Quantile level (\code{tau}) used in the loss function.}
+\item{tau}{The quantile level used in the loss function. Default is 0.5.}
 
-\item{nfolds}{Number of folds for cross-validation. Defaults to 5.}
+\item{nfolds}{Number of folds for cross-validation. Default is 5.
+The smallest allowed value is 3.}
 
-\item{foldid}{Optional vector specifying the indices of observations in each fold.
-If provided, it overrides \code{nfolds}.}
+\item{foldid}{Optional vector of values between 1 and \code{nfolds}
+identifying the fold of each observation. If provided, it overrides
+\code{nfolds}.}
 
 \item{...}{Additional arguments passed to \code{\link{hdqr}}.}
 }
 \value{
-An object with S3 class \code{cv.hdqr} consisting of
-  \item{lambda}{Candidate \code{lambda} values.}
-  \item{cvm}{Mean cross-validation error.}
-  \item{cvsd}{Standard error of the mean cross-validation error.}
-  \item{cvup}{Upper confidence curve: \code{cvm} + \code{cvsd}.}
-  \item{cvlo}{Lower confidence curve: \code{cvm} - \code{cvsd}.}
-  \item{lambda.min}{\code{lambda} achieving the minimum cross-validation error.}
-  \item{lambda.1se}{Largest \code{lambda} within one standard error of the minimum error.}
-  \item{cv.min}{Cross-validation error at \code{lambda.min}.}
-  \item{cv.1se}{Cross-validation error at \code{lambda.1se}.}
+An object with S3 class \code{"cv.hdqr"} consisting of
+  \item{lambda}{the \code{lambda} values used in the fits.}
+  \item{cvm}{mean cross-validation error, a vector of length
+    \code{length(lambda)}.}
+  \item{cvsd}{estimated standard error of \code{cvm}.}
+  \item{cvupper}{upper curve: \code{cvm + cvsd}.}
+  \item{cvlower}{lower curve: \code{cvm - cvsd}.}
+  \item{nzero}{number of nonzero coefficients at each \code{lambda}.}
+  \item{name}{a text string describing the error measure (for plotting).}
+  \item{call}{the call that produced this object.}
   \item{hdqr.fit}{a fitted \code{\link{hdqr}} object for the full data.}
-  \item{nzero}{Number of non-zero coefficients at each \code{lambda}.}
+  \item{lambda.min}{the \code{lambda} achieving the minimum
+    cross-validation error.}
+  \item{lambda.1se}{the largest \code{lambda} whose cross-validation error
+    is within one standard error of the minimum.}
+  \item{cvm.min}{cross-validation error at \code{lambda.min}.}
+  \item{cvm.1se}{cross-validation error at \code{lambda.1se}.}
 }
 \description{
-Performs k-fold cross-validation for \code{\link{hdqr}}.
+Performs k-fold cross-validation for \code{\link{hdqr}}. The held-out
+prediction error is measured with the check loss at the same quantile
+level \code{tau} used for fitting.
 }
 \details{
-This function computes the average cross-validation error and provides the standard error.
+The function first fits \code{\link{hdqr}} on the full data to obtain
+the \code{lambda} sequence, then refits the model \code{nfolds} times,
+each time leaving out one fold. The cross-validation error curve is the
+average held-out check loss over all observations, and its standard error
+is computed from the held-out losses.
 }
 \examples{
 set.seed(315)
@@ -51,8 +65,13 @@ x <- matrix(data = rnorm(n * p, mean = 0, sd = 1), nrow = n, ncol = p)
 beta_star <- c(c(2, 1.5, 0.8, 1, 1.75, 0.75, 0.3), rep(0, (p - 7)))
 eps <- rnorm(n, mean = 0, sd = 1)
 y <- x \%*\% beta_star + eps
-tau <- 0.5
-cv.fit <- cv.hdqr(x = x, y = y, tau = tau)
+cv.fit <- cv.hdqr(x = x, y = y, tau = 0.5)
+cv.fit
+plot(cv.fit)
+}
+\seealso{
+\code{\link{hdqr}}, \code{\link{coef.cv.hdqr}},
+  \code{\link{predict.cv.hdqr}}, \code{\link{plot.cv.hdqr}}
 }
 \keyword{models}
 \keyword{regression}

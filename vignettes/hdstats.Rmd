@@ -1,0 +1,234 @@
+---
+title: "Getting started with hdstats"
+author: "Yikai Zhang, Qian Tang, and Boxiang Wang"
+output:
+  rmarkdown::html_vignette:
+    toc: true
+vignette: >
+  %\VignetteIndexEntry{Getting started with hdstats}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width = 6,
+  fig.height = 4.5
+)
+```
+
+# Overview
+
+The **hdstats** package fits the whole regularization path of four
+penalized regression and classification models for high-dimensional data,
+all sharing one interface and one computational engine:
+
+| Function    | Loss                         | Response            | Model-specific argument |
+|-------------|------------------------------|---------------------|-------------------------|
+| `hdhuber()` | Huber                        | continuous          | `delta` (transition point) |
+| `hdqr()`    | quantile (check) loss        | continuous          | `tau` (quantile level) |
+| `hdrr()`    | Wilcoxon rank (Jaeckel)      | continuous          | none (built on `hdqr()`) |
+| `hdsvm()`   | hinge (support vector machine) | binary            | none |
+
+Every model minimizes, over the intercept $b_0$ and the coefficients
+$\beta \in \mathbb{R}^p$,
+
+$$
+\frac{1}{n}\sum_{i=1}^n \ell(y_i, b_0 + x_i^\top\beta)
++ \lambda_1 \sum_{j=1}^p w_j |\beta_j|
++ \frac{\lambda_2}{2} \sum_{j=1}^p v_j \beta_j^2 ,
+$$
+
+where $\ell$ is the model's loss, $\lambda_1$ (argument `lambda`) is the
+lasso tuning parameter for which a whole path of solutions is computed,
+$\lambda_2$ (argument `lam2`) is a single ridge parameter, and $w_j$ and $v_j$
+(arguments `pf` and `pf2`) are optional penalty factors that allow adaptive
+penalties or unpenalized variables.
+
+The Huber loss is smooth and is minimized directly by coordinate descent.
+The hinge and check losses are not differentiable; they are handled by the
+finite smoothing algorithm of Tang, Zhang, and Wang (2024), which replaces
+the loss by its convolution with a uniform kernel of bandwidth `hval`, solves
+the smoothed problem by coordinate descent with warm starts and active-set
+updates, and then shrinks the bandwidth and refines the solution until the
+KKT conditions of the original problem are met. Nonconvex SCAD and MCP
+penalties are available for the SVM and quantile models through the local
+linear approximation (`nc.hdsvm()`, `nc.hdqr()`). Every model has a `cv.*()`
+function for $k$-fold cross-validation, and all objects have `coef()`,
+`predict()`, and `print()` methods; cross-validation objects also have a
+`plot()` method.
+
+# Simulated data
+
+We simulate a sparse regression problem with $n = 100$ observations,
+$p = 200$ predictors, and heavy-tailed $t_3$ errors, a setting in which
+robust losses are attractive.
+
+```{r data}
+library(hdstats)
+set.seed(2024)
+n <- 100
+p <- 200
+x <- matrix(rnorm(n * p), n, p)
+beta_star <- c(2, -1.5, 1, 0.8, rep(0, p - 4))
+y <- drop(x %*% beta_star) + rt(n, df = 3)
+```
+
+# Huber regression
+
+`hdhuber()` computes the solution path for a decreasing sequence of
+`lambda` values (100 by default). Printing a fit shows the number of nonzero
+coefficients at each `lambda`.
+
+```{r huber}
+fit <- hdhuber(x, y, delta = 1, lam2 = 0.01)
+fit$lambda[1:5]
+fit$df[1:10]
+# print() lists Df and lambda along the path; shown here for a short path
+hdhuber(x, y, delta = 1, lam2 = 0.01, nlambda = 10)
+```
+
+`coef()` and `predict()` accept any value of `lambda` through the argument
+`s`; values that are not on the fitted grid are handled by linear
+interpolation.
+
+```{r huber-coef}
+coef(fit, s = 0.1)[1:6, ]
+predict(fit, newx = x[1:3, ], s = c(0.2, 0.1))
+```
+
+`cv.hdhuber()` performs 5-fold cross-validation (by default) using the Huber
+loss on the held-out folds, and `plot()` shows the cross-validation curve
+with one-standard-error bars; the dotted lines mark `lambda.min` and
+`lambda.1se`.
+
+```{r huber-cv}
+cv.fit <- cv.hdhuber(x, y, delta = 1, lam2 = 0.01)
+cv.fit
+plot(cv.fit)
+```
+
+Coefficients at the selected tuning parameter:
+
+```{r huber-cv-coef}
+b <- coef(cv.fit, s = "lambda.min")
+b[b[, 1] != 0, , drop = FALSE]
+```
+
+# Quantile regression
+
+`hdqr()` has the same interface with the quantile level `tau`
+(default 0.5, i.e. median regression). Different quantiles can reveal
+heteroscedastic effects.
+
+```{r qr}
+fit.med <- hdqr(x, y, tau = 0.5, lam2 = 0.01)
+fit.q90 <- hdqr(x, y, tau = 0.9, lam2 = 0.01)
+cbind(median = coef(fit.med, s = 0.1)[1:5, ],
+      q90 = coef(fit.q90, s = 0.1)[1:5, ])
+```
+
+Cross-validation uses the check loss at the same quantile level:
+
+```{r qr-cv}
+cv.q <- cv.hdqr(x, y, tau = 0.5, lam2 = 0.01)
+plot(cv.q)
+```
+
+## Nonconvex penalties
+
+The lasso penalty shrinks large coefficients towards zero. The SCAD and MCP
+penalties reduce this bias; `nc.hdqr()` fits them with a few local linear
+approximation steps, each of which is a weighted lasso fit. The
+`lambda` sequence for the nonconvex penalty can be supplied or, by default,
+taken from the initial lasso fit; here we use a short grid to keep the
+computation small.
+
+```{r nc-qr}
+lambda <- 10^seq(-0.5, -1.5, length.out = 10)
+nc.fit <- nc.hdqr(x, y, tau = 0.5, lambda = lambda, lam2 = 0.01, pen = "scad")
+cbind(lasso = coef(fit.med, s = 0.1)[1:5, ],
+      scad = coef(nc.fit, s = 0.1)[1:5, ])
+```
+
+`cv.nc.hdqr()` cross-validates the nonconvex fit in the same way.
+
+```{r nc-qr-cv}
+cv.nc <- cv.nc.hdqr(x, y, tau = 0.5, lambda = lambda, lam2 = 0.01, pen = "mcp")
+cv.nc$lambda.min
+```
+
+# Wilcoxon rank regression
+
+Jaeckel's rank regression with Wilcoxon scores minimizes the dispersion of
+the residuals, $\sum_{i<j} |r_i - r_j|$, which is the median check loss of all
+pairwise differences of the data. `hdrr()` builds the $n(n-1)/2$ differences
+and calls `hdqr()`, then recovers the intercept as the median residual. The
+returned object inherits the `hdqr` methods.
+
+```{r rr}
+rr.fit <- hdrr(x, y, lam2 = 0.01, nlambda = 50)
+coef(rr.fit, s = 0.1)[1:5, ]
+cv.rr <- cv.hdrr(x, y, lam2 = 0.01, nlambda = 50)
+cv.rr
+```
+
+Because the design is differenced, memory and time grow as $O(n^2 p)$, so
+`hdrr()` is intended for moderate $n$.
+
+# Support vector machines
+
+`hdsvm()` fits the elastic-net penalized linear SVM to a binary response,
+which may be coded as $-1/1$, $0/1$, or a two-level factor. Predictions are
+class labels by default or the linear predictor with `type = "loss"`.
+
+```{r svm}
+prob <- plogis(drop(x %*% beta_star))
+yb <- factor(ifelse(rbinom(n, 1, prob) == 1, "case", "control"),
+             levels = c("control", "case"))
+svm.fit <- hdsvm(x, yb, lam2 = 0.01)
+cv.svm <- cv.hdsvm(x, yb, lam2 = 0.01)
+plot(cv.svm)
+table(predicted = predict(cv.svm, x, s = "lambda.min"), observed = yb)
+```
+
+The nonconvex version works in the same way:
+
+```{r nc-svm}
+nc.svm <- nc.hdsvm(x, yb, lambda = lambda, lam2 = 0.01, pen = "scad")
+nc.svm$df
+```
+
+# Common arguments
+
+* `lambda`, `nlambda`, `lambda.factor`: the `lambda` sequence is computed
+  automatically from `lambda.factor * lambda_max` to `lambda_max` on a log
+  scale, or can be supplied (it is sorted in decreasing order so that warm
+  starts can be used).
+* `lam2`: the ridge parameter $\lambda_2$; a single value per fit.
+* `pf`, `pf2`, `exclude`: L1 and L2 penalty factors (0 means unpenalized)
+  and variables to drop; `pf` can also be a matrix with one column per
+  `lambda`, which is how the nonconvex fits are implemented.
+* `standardize`: predictors are standardized internally by default;
+  coefficients are always returned on the original scale.
+* `dfmax`, `pmax`: stop the path early once too many variables are active.
+* `eps`, `maxit`: convergence threshold and the maximum number of
+  coordinate-descent passes for the whole path; a warning is issued and the
+  partial path is returned if `maxit` is reached.
+* `hval`, `is_exact`, `sigma` (`hdqr()`, `hdsvm()`): the initial smoothing
+  bandwidth, whether to run an additional exact projection step at small
+  bandwidths, and the augmented-Lagrangian parameter of that step.
+
+# References
+
+Tang, Q., Zhang, Y., and Wang, B. (2024). Finite smoothing algorithm for
+high-dimensional support vector machines and quantile regression.
+*Proceedings of the 41st International Conference on Machine Learning*.
+<https://openreview.net/forum?id=RvwMTDYTOb>
+
+Friedman, J., Hastie, T., and Tibshirani, R. (2010). Regularization paths
+for generalized linear models via coordinate descent. *Journal of
+Statistical Software*, 33(1), 1--22.
+<https://doi.org/10.18637/jss.v033.i01>

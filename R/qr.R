@@ -1,24 +1,27 @@
-#' Fit the high-dimensional linear quantile regression with elasticnet regularization. The solution path is computed
-#' at a grid of values of tuning parameter \code{lambda}.
+#' Fit Penalized Quantile Regression
 #'
-#' @param x Matrix of predictors, of dimension \eqn{n * p};
+#' Fits the solution path of elastic-net penalized linear quantile
+#' regression over a grid of values of the tuning parameter \code{lambda},
+#' using the finite smoothing algorithm with coordinate descent, warm
+#' starts, and active-set updates.
+#'
+#' @param x Matrix of predictors, of dimension \eqn{n \times p}{n x p};
 #'   each row is an observation.
-#' @param y Response variable. The length is \eqn{n}.
+#' @param y Numeric response vector of length \eqn{n}.
 #' @param tau The quantile level \eqn{\tau}. The value must be
-#'   in (0,1). Default is 0.5.
+#'   in (0,1). Default is 0.5 (median regression).
 #' @param nlambda The number of \code{lambda} values (default is 100).
 #' @param lambda.factor The factor for getting the minimal value
 #'   in the \code{lambda} sequence, where
-#'   \code{min(lambda)} = \code{lambda.factor} * \code{max(lambda)}
+#'   \code{min(lambda) = lambda.factor * max(lambda)}
 #'   and \code{max(lambda)} is the smallest value of \code{lambda}
-#'   for which all coefficients (except the intercept when it is present)
+#'   for which all coefficients (except the intercept)
 #'   are penalized to zero. The default depends on the relationship
 #'   between \eqn{n} (the number of rows in the design matrix) and
-#'   \eqn{p} (the number of predictors). If \eqn{n < p}, it defaults to
-#'   \code{0.05}. If \eqn{n > p}, the default is \code{0.001},
-#'   closer to zero.  A very small value of \code{lambda.factor} will
-#'   lead to a saturated fit. The argument takes no effect if there is a
-#'   user-supplied \code{lambda} sequence.
+#'   \eqn{p} (the number of predictors): if \eqn{n < p}, it is
+#'   \code{0.01}; otherwise it is \code{1e-04}. A very small value of
+#'   \code{lambda.factor} will lead to a saturated fit. The argument has no
+#'   effect if a \code{lambda} sequence is supplied by the user.
 #' @param lambda A user-supplied \code{lambda} sequence. Typically,
 #'   by leaving this option unspecified, users can have the program
 #'   compute its own \code{lambda} sequence based on \code{nlambda}
@@ -26,17 +29,24 @@
 #'   a decreasing sequence of \code{lambda} values than a single
 #'   (small) value. The program will ensure that the user-supplied
 #'   \code{lambda} sequence is sorted in decreasing order before
-#'   fitting the model to take advanage of the warm-start technique.
-#' @param lam2 Regularization parameter \code{lambda2} for the
-#'   quadratic penalty of the coefficients. Unlike \code{lambda},
-#'   only one value of \code{lambda2} is used for each fitting process.
+#'   fitting the model to take advantage of the warm-start technique.
+#' @param lam2 Regularization parameter \eqn{\lambda_2} for the
+#'   quadratic (ridge) penalty on the coefficients. Unlike \code{lambda},
+#'   only one value of \code{lam2} is used for each fitting process.
+#'   Default is 0.01.
+#' @param hval Initial bandwidth of the uniform-kernel convolution smoothing
+#'   of the check loss. Default is 0.125. The bandwidth is decreased
+#'   geometrically inside the algorithm until the solution satisfies the
+#'   KKT conditions of the original (non-smooth) problem.
 #' @param pf L1 penalty factor of length \eqn{p} used for the adaptive
-#'   LASSO or adaptive elastic net. Separate L1 penalty weights can be
+#'   lasso or adaptive elastic net. Separate L1 penalty weights can be
 #'   applied to each coefficient to allow different L1 shrinkage.
 #'   Can be 0 for some variables (but not all), which imposes no
 #'   shrinkage, and results in that variable always being included
 #'   in the model. Default is 1 for all variables (and implicitly
-#'   infinity for variables in the \code{exclude} list).
+#'   infinity for variables in the \code{exclude} list). A matrix with
+#'   \code{nlambda} columns (one penalty-factor vector per \code{lambda}
+#'   value) is also accepted.
 #' @param pf2 L2 penalty factor of length \eqn{p} used for adaptive
 #'   elastic net. Separate L2 penalty weights can be applied to
 #'   each coefficient to allow different L2 shrinkage.
@@ -49,50 +59,73 @@
 #'   Default is \eqn{p+1}.
 #' @param pmax The maximum number of coefficients allowed ever
 #'   to be nonzero along the solution path. For example, once
-#'   \eqn{\beta} enters the model, no matter how many times it
+#'   \eqn{\beta_j} enters the model, no matter how many times it
 #'   exits or re-enters the model through the path, it will be
-#'   counted only once. Default is \code{min(dfmax x 1.2, p)}.
+#'   counted only once. Default is \code{min(dfmax * 1.2, p)}.
 #' @param standardize Logical flag for variable standardization,
 #'   prior to fitting the model sequence. The coefficients are
-#'   always returned to the original scale. Default is \code{TRUE}.
-#' @param hval The smoothing parameter. Default is 0.125.
-#' @param eps Stopping criterion.
-#' @param maxit Maximum number of iterates.
-#' @param sigma Penalty parameter appearing in the quadratic term
-#'   of the augmented Lagrangian function. Must be positive.
-#' @param is_exact Exact or approximated solutions. Default is \code{FALSE}.
+#'   always returned on the original scale. Default is \code{TRUE}.
+#' @param eps Convergence threshold for coordinate descent: iterations
+#'   stop when the largest squared change of any coefficient within one
+#'   pass falls below \code{eps}. Default is \code{1e-08}.
+#' @param maxit Maximum number of coordinate-descent passes over the data,
+#'   summed over the whole \code{lambda} path. Default is \code{1e+06}.
+#' @param sigma Penalty parameter of the quadratic term in the augmented
+#'   Lagrangian used by the exact projection step (only used when
+#'   \code{is_exact = TRUE}). Must be positive. Default is 0.05.
+#' @param is_exact Logical. If \code{TRUE}, an additional ADMM-type
+#'   projection step is applied at small bandwidths to refine the solution
+#'   of the smoothed problem towards the exact solution of the check-loss
+#'   problem; otherwise (the default) the smoothed solution is returned.
 #'
 #' @details
-#' Note that the objective function in the penalized quantile
-#' regression is
-#'   \deqn{1'\rho_{\tau}(y-X\beta-b_0))/N + \lambda_1\cdot|pf_1\circ\beta|_1 +
-#'     0.5*\lambda_2\cdot||\sqrt{pf_2}\circ\beta||^2,}
-#'   where \eqn{\rho_{\tau}} the quantile or check loss
-#'   and the penalty is a combination of weighted L1 and L2 terms and
-#'   \eqn{\circ} denotes the Hadmamard product.
+#' The penalized quantile regression problem solved is
+#' \deqn{\min_{b_0, \beta} \frac{1}{n}\sum_{i=1}^n
+#'   \rho_\tau(y_i - b_0 - x_i^\top \beta)
+#'   + \lambda_1 |pf_1 \circ \beta|_1
+#'   + \frac{\lambda_2}{2} \|\sqrt{pf_2} \circ \beta\|_2^2,}
+#' where \eqn{\rho_\tau(r) = r\{\tau - I(r < 0)\}} is the quantile (check)
+#' loss and \eqn{\circ} denotes the Hadamard product. The check loss is
+#' replaced by its convolution with a uniform kernel of bandwidth
+#' \code{hval}, which yields a smooth surrogate that is minimized by
+#' coordinate descent; the bandwidth is then shrunk and the fit is
+#' refined (the finite smoothing algorithm of Tang, Zhang, and Wang, 2024).
 #'
 #' For faster computation, if the algorithm is not converging or
-#' running slow, consider increasing \code{eps}, increasing
+#' running slowly, consider increasing \code{eps}, increasing
 #' \code{sigma}, decreasing \code{nlambda}, or increasing
 #' \code{lambda.factor} before increasing \code{maxit}.
 #'
 #' @return
-#' An object with S3 class \code{hdqr} consisting of
-#'   \item{call}{the call that produced this object}
-#'   \item{b0}{intercept sequence of length \code{length(lambda)}}
-#'   \item{beta}{a \code{nvars x length(lambda)} matrix of coefficients,
-#'               stored as a sparse matrix (\code{dgCMatrix} class,
-#'               the standard class for sparse numeric matrices in
-#'               the \code{Matrix} package.). To convert it into
-#'               normal type matrix, use \code{as.matrix()}.}
-#'   \item{lambda}{the actual sequence of \code{lambda} values used}
-#'   \item{df}{the number of nonzero coefficients for each value
-#'             of \code{lambda}.}
-#'   \item{npasses}{the number of iterations for every lambda value}
-#'   \item{jerr}{error flag, for warnings and errors, 0 if no error.}
+#' An object with S3 class \code{"hdqr"} consisting of
+#'   \item{call}{the call that produced this object.}
+#'   \item{b0}{intercept sequence of length \code{length(lambda)}.}
+#'   \item{beta}{a \eqn{p \times} \code{length(lambda)} matrix of
+#'     coefficients, stored as a sparse matrix (\code{dgCMatrix} class,
+#'     the standard class for sparse numeric matrices in the \code{Matrix}
+#'     package). To convert it into an ordinary matrix, use
+#'     \code{as.matrix()}.}
+#'   \item{lambda}{the actual sequence of \code{lambda} values used.}
+#'   \item{df}{the number of nonzero coefficients for each value of
+#'     \code{lambda}.}
+#'   \item{dim}{dimension of the coefficient matrix.}
+#'   \item{npasses}{the number of coordinate-descent passes for every
+#'     \code{lambda} value.}
+#'   \item{jerr}{error flag, for warnings and errors; 0 if no error.}
+#'   \item{tau}{the quantile level used.}
+#'   \item{hval}{the initial smoothing bandwidth used.}
+#'   \item{lam2}{the \eqn{\lambda_2} value used.}
+#' @seealso \code{\link{cv.hdqr}}, \code{\link{nc.hdqr}}, \code{\link{hdrr}},
+#'   \code{\link{coef.hdqr}}, \code{\link{predict.hdqr}}
+#' @references
+#' Tang, Q., Zhang, Y., and Wang, B. (2024). Finite smoothing algorithm for
+#' high-dimensional support vector machines and quantile regression.
+#' \emph{Proceedings of the 41st International Conference on Machine
+#' Learning (ICML)}. \url{https://openreview.net/forum?id=RvwMTDYTOb}
 #'
-#' @keywords quantile regression
-#' @useDynLib hdqr, .registration=TRUE
+#' Koenker, R. and Bassett, G. (1978). Regression quantiles.
+#' \emph{Econometrica}, 46(1), 33--50. \doi{10.2307/1913643}
+#' @keywords models regression
 #' @export
 #' @examples
 #' set.seed(315)
@@ -102,94 +135,102 @@
 #' beta_star <- c(c(2, 1.5, 0.8, 1, 1.75, 0.75, 0.3), rep(0, (p - 7)))
 #' eps <- rnorm(n, mean = 0, sd = 1)
 #' y <- x %*% beta_star + eps
-#' tau <- 0.5
-#' lam2 <- 0.01
-#' fit <- hdqr(x = x, y = y, tau = tau, lam2 = lam2)
-
-hdqr <- function(x, y, tau, nlambda=100, lambda.factor=ifelse(nobs < nvars, 0.01, 1e-04), 
-    lambda=NULL, lam2=0.01, hval=.125, pf=rep(1, nvars), pf2=rep(1, nvars), 
-    exclude, dfmax=nvars + 1, pmax=min(dfmax * 1.2, nvars), standardize=TRUE, 
-    eps=1e-08, maxit=1e+06, sigma=0.05, is_exact=FALSE) {
+#' fit <- hdqr(x = x, y = y, tau = 0.5, lam2 = 0.01)
+#' fit
+#' coef(fit, s = fit$lambda[10])[1:8, ]
+hdqr <- function(x, y, tau = 0.5, nlambda = 100,
+                 lambda.factor = ifelse(nobs < nvars, 0.01, 1e-04),
+                 lambda = NULL, lam2 = 0.01, hval = 0.125,
+                 pf = rep(1, nvars), pf2 = rep(1, nvars),
+                 exclude, dfmax = nvars + 1,
+                 pmax = min(dfmax * 1.2, nvars), standardize = TRUE,
+                 eps = 1e-08, maxit = 1e+06, sigma = 0.05, is_exact = FALSE) {
   ####################################################################
-  this.call = match.call()
-  y = drop(y)
-  x = as.matrix(x)
-  np = dim(x)
-  nobs = as.integer(np[1])
-  nvars = as.integer(np[2])
-  vnames = colnames(x)
-  if (is.null(vnames)) 
-    vnames = paste0("V", seq(nvars))
-  if (length(y) != nobs) 
+  this.call <- match.call()
+  y <- drop(y)
+  x <- as.matrix(x)
+  np <- dim(x)
+  nobs <- as.integer(np[1])
+  nvars <- as.integer(np[2])
+  vnames <- colnames(x)
+  if (is.null(vnames))
+    vnames <- paste0("V", seq(nvars))
+  if (length(y) != nobs)
     stop("x and y have different number of observations")
+  if (!is.numeric(y))
+    stop("y must be numeric")
+  if (!is.numeric(tau) || length(tau) != 1L || tau <= 0 || tau >= 1)
+    stop("tau must be a single number in (0, 1)")
+  if (!is.numeric(hval) || length(hval) != 1L || hval <= 0)
+    stop("hval must be a single positive number")
   ####################################################################
-  #parameter setup
-  alpha = NULL # user can change this to tune elastic-net based on alpha.  
+  ## parameter setup
+  alpha <- NULL # user can change this to tune elastic-net based on alpha.
   if (!is.null(alpha)) {
-    alpha = as.double(alpha)
-    if (alpha <= 0 || alpha > 1) 
+    alpha <- as.double(alpha)
+    if (alpha <= 0 || alpha > 1)
       stop("alpha: 0 < alpha <= 1")
-    if (!is.null(lam2)) 
+    if (!is.null(lam2))
       warning("lam2 has no effect.")
-    lam2 = -1.0
+    lam2 <- -1.0
   } else {
     if (!is.null(lam2)) {
       if (lam2 < 0) stop("lam2 is non-negative.")
-      alpha = -1.0
+      alpha <- -1.0
     } else {
-      alpha = 1.0 # default lasso
+      alpha <- 1.0 # default lasso
     }
   }
-  maxit = as.integer(maxit)
-  isd = as.integer(standardize)
-  eps = as.double(eps)
-  dfmax = as.integer(dfmax)
-  pmax = as.integer(pmax)
+  maxit <- as.integer(maxit)
+  isd <- as.integer(standardize)
+  eps <- as.double(eps)
+  dfmax <- as.integer(dfmax)
+  pmax <- as.integer(pmax)
   if (!missing(exclude)) {
-    jd = match(exclude, seq(nvars), 0)
-    if (!all(jd > 0)) 
+    jd <- match(exclude, seq(nvars), 0)
+    if (!all(jd > 0))
       stop("Some excluded variables are out of range.")
-    jd = as.integer(c(length(jd), jd))
-  } else jd = as.integer(0)
+    jd <- as.integer(c(length(jd), jd))
+  } else jd <- as.integer(0)
   ####################################################################
-  #lambda setup
-  nlam = as.integer(nlambda)
+  ## lambda setup
+  nlam <- as.integer(nlambda)
   if (is.null(lambda)) {
-    if (lambda.factor >= 1) 
+    if (lambda.factor >= 1)
       stop("lambda.factor should be less than 1.")
-    flmin = as.double(lambda.factor)
-    ulam = double(1)
+    flmin <- as.double(lambda.factor)
+    ulam <- double(1)
   } else {
-    #flmin=1 if user define lambda
-    flmin = as.double(1)
-    if (any(lambda < 0)) 
+    ## flmin = 1 if user defines lambda
+    flmin <- as.double(1)
+    if (any(lambda < 0))
       stop("The values of lambda should be non-negative.")
-    ulam = as.double(rev(sort(lambda)))
-    nlam = as.integer(length(lambda))
+    ulam <- as.double(rev(sort(lambda)))
+    nlam <- as.integer(length(lambda))
   }
-  pfncol = NCOL(pf)
-  pf = matrix(as.double(pf), ncol=pfncol)
-  if (NROW(pf) != nvars) {
+  pfncol <- NCOL(pf)
+  pf <- matrix(as.double(pf), ncol = pfncol)
+  if (NROW(pf) != nvars)
     stop("The size of L1 penalty factor must be the same with the number of input variables.")
-  } else {
-    if (pfncol != nlambda & NCOL(pf) != 1)
-    stop("pf should be a matrix with 1 or nlambda columns.")
-  }
-  if (length(pf2) != nvars) 
+  if (pfncol != 1 && pfncol != nlam)
+    stop("pf should be a matrix with 1 or length(lambda) columns.")
+  if (length(pf2) != nvars)
     stop("The size of L2 penalty factor must be the same with the number of input variables.")
-  pf2 = as.double(pf2)
+  pf2 <- as.double(pf2)
   ####################################################################
-  fit = lqr_hd_cpp(alpha, lam2, hval, nobs, nvars,
-    x, as.double(y), as.double(tau), jd, pfncol, pf, pf2, dfmax,
-    pmax, nlam, flmin, ulam, eps, isd, maxit,
-    as.double(sigma), as.integer(is_exact))
-  outlist = getoutput(fit, maxit, pmax, nvars, vnames)
-  fit = c(outlist, list(npasses = fit$npass, jerr = fit$jerr))
-  if (is.null(lambda)) 
-    fit$lambda = lamfix(fit$lambda)
-  fit$call = this.call
+  fit <- lqr_hd_cpp(alpha, lam2, hval, nobs, nvars,
+                    x, as.double(y), as.double(tau), jd, pfncol, pf, pf2, dfmax,
+                    pmax, nlam, flmin, ulam, eps, isd, maxit,
+                    as.double(sigma), as.integer(is_exact))
+  outlist <- getoutput(fit, maxit, pmax, nvars, vnames)
+  fit <- c(outlist, list(npasses = fit$npass, jerr = fit$jerr))
+  if (is.null(lambda))
+    fit$lambda <- lamfix(fit$lambda)
+  fit$tau <- tau
+  fit$hval <- hval
+  fit$lam2 <- lam2
+  fit$call <- this.call
   ####################################################################
-  class(fit) = c("hdqr")
+  class(fit) <- c("hdqr")
   fit
-} 
-
+}

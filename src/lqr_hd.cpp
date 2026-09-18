@@ -1,4 +1,3 @@
-// [[Rcpp::plugins(cpp11)]]
 #include <Rcpp.h>
 #include <cmath>
 #include <algorithm>
@@ -355,14 +354,23 @@ List lqr_hd_cpp(double alpha, double lam2, double hval, int nobs, int nvars,
   if (jd.size() > 0 && jd[0] > 0) { const int deln = jd[0]; for (int k = 0; k < deln; ++k) { int idx = jd[k + 1]; if (idx >= 1 && idx <= nvars) ju[idx - 1] = 0; } }
   { int any = 0; for (int j = 0; j < nvars; ++j) if (ju[j]) { any = 1; break; } if (!any) return List::create(_["nalam"]=0,_["jerr"]=7777); }
 
-  for (int c = 0; c < pf.ncol(); ++c) for (int j = 0; j < nvars; ++j) if (pf(j,c) < 0.0) pf(j,c) = 0.0;
-  for (int j = 0; j < nvars; ++j) if (pf2[j] < 0.0) pf2[j] = 0.0;
+  { // mirror the Fortran original: at least one positive L1 and one positive L2 penalty factor are required
+    double maxpf = R_NegInf, maxpf2 = R_NegInf;
+    for (int c = 0; c < pf.ncol(); ++c) for (int j = 0; j < nvars; ++j) if (pf(j, c) > maxpf) maxpf = pf(j, c);
+    for (int j = 0; j < nvars; ++j) if (pf2[j] > maxpf2) maxpf2 = pf2[j];
+    if (!(maxpf > 0.0) || !(maxpf2 > 0.0)) return List::create(_["nalam"] = 0, _["jerr"] = 10000);
+  }
+  // work on copies so that the caller's R objects are never modified in place
+  NumericMatrix pfc = clone(pf);
+  NumericVector pf2c = clone(pf2);
+  for (int c = 0; c < pfc.ncol(); ++c) for (int j = 0; j < nvars; ++j) if (pfc(j, c) < 0.0) pfc(j, c) = 0.0;
+  for (int j = 0; j < nvars; ++j) if (pf2c[j] < 0.0) pf2c[j] = 0.0;
 
   NumericMatrix Xstd = clone(X);
   NumericVector xmean, xnorm, maj;
   standardize_cpp(Xstd, ju, isd, xmean, xnorm, maj);
 
-  List res = lqr_path(alpha, lam2, hval, maj, Xstd, y, tau, ju, pfncol, pf, pf2,
+  List res = lqr_path(alpha, lam2, hval, maj, Xstd, y, tau, ju, pfncol, pfc, pf2c,
                       dfmax, pmax, nlam, flmin, ulam, eps, maxit, sigma, is_exact);
 
   int jerr = as<int>(res["jerr"]);

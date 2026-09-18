@@ -1,17 +1,36 @@
 Package: hdstats
 Type: Package
-Title: High-Dimensional Smoothed SVM, Quantile, and Huber Regression (Rcpp)
-Version: 0.1.0
-Authors@R: c(person(given = "Yikai", family = "Zhang", role = c("aut","cre"),
-                    email = "yikai-zhang@uiowa.edu"))
-Description: A unified package combining the hdhuber, hdsvm, and hdqr solvers for
-    high-dimensional penalized Huber regression, support vector machines, and
-    quantile regression. The coordinate-descent kernels are implemented in C++
-    via Rcpp (translated from the original Fortran), using uniform-density
-    convolution smoothing.
+Title: High-Dimensional Penalized Huber, Quantile, and Rank Regression and Support Vector Machines
+Version: 0.2.0
+Date: 2026-09-18
+Authors@R: c(
+    person(given = "Yikai", family = "Zhang", role = c("aut", "cre"),
+           email = "yikai-zhang@uiowa.edu"),
+    person(given = "Qian", family = "Tang", role = "aut",
+           email = "qian-tang@uiowa.edu"),
+    person(given = "Boxiang", family = "Wang", role = "aut",
+           email = "boxiang-wang@uiowa.edu"))
+Description: Fits the entire regularization path of elastic-net penalized
+    Huber regression, quantile regression, Wilcoxon rank regression, and
+    linear support vector machines for high-dimensional data. The non-smooth
+    hinge and check losses are handled by the finite smoothing algorithm of
+    Tang, Zhang, and Wang (2024) <https://openreview.net/forum?id=RvwMTDYTOb>,
+    which combines uniform-kernel convolution smoothing with coordinate
+    descent, warm starts, and active-set or strong-rule screening. Nonconvex
+    SCAD and MCP penalties are supported through the local linear
+    approximation, and k-fold cross-validation with 'coef', 'predict',
+    'print', and 'plot' methods is provided for tuning. The compute kernels
+    are written in C++ via 'Rcpp'.
 License: GPL (>= 2)
+URL: https://github.com/YikaiZhang95/hdstats
+BugReports: https://github.com/YikaiZhang95/hdstats/issues
 Encoding: UTF-8
+Language: en-US
 Depends: R (>= 3.6)
 LinkingTo: Rcpp
-Imports: Rcpp, Matrix, methods
-RoxygenNote: 7.3.2.9000
+Imports: Rcpp, Matrix, methods, stats, graphics
+Suggests: testthat (>= 3.0.0), knitr, rmarkdown, quantreg, e1071
+VignetteBuilder: knitr
+Config/testthat/edition: 3
+NeedsCompilation: yes
+RoxygenNote: 7.3.1
