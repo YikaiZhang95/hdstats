@@ -92,7 +92,7 @@ x <- rbind(x1, x2)
 beta <- 0.1 * rnorm(p)
 prob <- plogis(c(x \%*\% beta))
 y <- 2 * rbinom(n, 1, prob) - 1
-lambda <- 10^(seq(1, -4, length.out = 30))
+lambda <- 10^(seq(0, -2, length.out = 20))
 \donttest{
 nc.fit <- nc.hdsvm(x = x, y = y, lambda = lambda, lam2 = 0.01, pen = "scad")
 nc.fit

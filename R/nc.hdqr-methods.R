@@ -29,7 +29,7 @@
 #' beta_star <- c(c(2, 1.5, 0.8, 1, 1.75, 0.75, 0.3), rep(0, (p - 7)))
 #' eps <- rnorm(n, mean = 0, sd = 1)
 #' y <- x %*% beta_star + eps
-#' lambda <- 10^(seq(1, -4, length.out = 30))
+#' lambda <- 10^(seq(0, -2, length.out = 20))
 #' nc.fit <- nc.hdqr(x = x, y = y, tau = 0.5, lambda = lambda, lam2 = 0.01,
 #'                   pen = "scad")
 #' nc.coefs <- coef(nc.fit, s = nc.fit$lambda[3:5])
@@ -63,7 +63,7 @@ coef.nc.hdqr <- function(object, s = NULL, type = c("coefficients", "nonzero"), 
 #' beta_star <- c(c(2, 1.5, 0.8, 1, 1.75, 0.75, 0.3), rep(0, (p - 7)))
 #' eps <- rnorm(n, mean = 0, sd = 1)
 #' y <- x %*% beta_star + eps
-#' lambda <- 10^(seq(1, -4, length.out = 30))
+#' lambda <- 10^(seq(0, -2, length.out = 20))
 #' nc.fit <- nc.hdqr(x = x, y = y, tau = 0.5, lambda = lambda, lam2 = 0.01,
 #'                   pen = "scad")
 #' nc.preds <- predict(nc.fit, newx = tail(x), s = nc.fit$lambda[3:5])

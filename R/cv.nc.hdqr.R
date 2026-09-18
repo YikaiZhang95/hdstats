@@ -56,7 +56,7 @@
 #' beta_star <- c(c(2, 1.5, 0.8, 1, 1.75, 0.75, 0.3), rep(0, (p - 7)))
 #' eps <- rnorm(n, mean = 0, sd = 1)
 #' y <- x %*% beta_star + eps
-#' lambda <- 10^(seq(1, -4, length.out = 10))
+#' lambda <- 10^(seq(0, -2, length.out = 10))
 #' \donttest{
 #' cv.nc.fit <- cv.nc.hdqr(x = x, y = y, tau = 0.5, lambda = lambda,
 #'                         lam2 = 0.01, pen = "scad")
